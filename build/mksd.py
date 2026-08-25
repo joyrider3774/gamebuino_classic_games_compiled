@@ -18,7 +18,7 @@ than duplicated and the MBR is never applied twice.
 import os, sys, struct, datetime
 
 SRC_ROOT = r"C:\github\gamebuino_classic_source_codes"
-SITE = r"C:\github\gamebuino_classic_games"
+SITE = os.environ.get("GB_SITE", r"C:\github\gamebuino_classic_games_compiled")
 IMAGE = os.path.join(SITE, "webemulator", "sdcard.img")
 
 # 8.3 name on the card  ->  file in the source archive

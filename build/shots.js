@@ -12,7 +12,7 @@ const fs = require('fs');
 const path = require('path');
 const puppeteer = require('puppeteer');
 
-const SITE = process.env.SITE_ROOT || 'C:/github/gamebuino_classic_games';
+const SITE = process.env.SITE_ROOT || 'C:/github/gamebuino_classic_games_compiled';
 const BASE = process.env.BASE_URL || 'http://127.0.0.1:8123';
 const OUT = path.join(SITE, 'screenshots');
 const SCALE = 4;                 // 84x48 -> 336x192

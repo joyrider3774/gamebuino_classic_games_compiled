@@ -234,6 +234,24 @@ Two things this repo depends on:
   screenshot. Nothing here is big enough to need LFS — the largest file is the
   1.5 MB SD card image — so all links stay plain relative paths.
 
+## Source links on each card
+
+Two different links can appear on a card, and which one shows is derived from
+how the archive actually stores that entry (its `.gitmodules`, cross-checked
+against git's own index):
+
+- **Original repo** â€” the upstream repository, for the 98 entries the archive
+  keeps as a **git submodule**.
+- **Archived source** â€” the folder in the archive, for the 21 entries whose
+  files are **really committed there**: things recovered from a forum post, a
+  Mediafire link or a personal site, where the archive is the only place the
+  code still exists.
+
+A submodule folder is only a commit pointer, so browsing it shows a reference
+rather than the game's source â€” linking to it as "archived source" would be a
+dead end, so those cards link upstream instead. One entry (BigBlackBox) shows
+both: its files are committed here *and* it has a live mirror repository.
+
 ## Credits
 
 - **Simbuino / Simbuino4Web** — Mark Feldman ("Myndale"), MIT.

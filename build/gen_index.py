@@ -2,7 +2,11 @@
 import os, json, html, datetime
 
 BUILD = r"C:\gbbuild"
-SITE = r"C:\github\gamebuino_classic_games"
+SITE = os.environ.get("GB_SITE", r"C:\github\gamebuino_classic_games_compiled")
+
+# entries that read a data file off the SD card, so the player mounts the
+# shared card image for them (see mksd.py for what is on it)
+NEEDS_SD = {'B-Rally', 'gamebuino-community-rpg', 'sd_map_test'}
 
 CSS = """
   :root {
@@ -372,7 +376,7 @@ def card_html(e):
     # to webemulator/, not to this page
     play = ('webemulator/player.html?hex=../' + e['hex']
             + '&amp;title=' + html.escape(e['title'].replace(' ', '+')))
-    if e['slug'] == 'B-Rally':
+    if e['slug'] in NEEDS_SD:
         play += '&amp;sd=sdcard.img'
 
     if e['shot']:
@@ -407,7 +411,11 @@ def card_html(e):
     actions = ['<a class="play-button" href="%s" data-play>&#9654; Play</a>' % play]
     if e['url']:
         actions.append('<a class="src-link" href="%s" target="_blank" rel="noopener">Original repo</a>' % html.escape(e['url']))
-    actions.append('<a class="src-link" href="%s" target="_blank" rel="noopener">Archived source</a>' % html.escape(e['archive']))
+    # Only entries the archive really holds as files get an archived link. For
+    # a submodule that folder is just a commit pointer, so the upstream repo
+    # above is the only place the source actually is.
+    if e.get('archive'):
+        actions.append('<a class="src-link" href="%s" target="_blank" rel="noopener">Archived source</a>' % html.escape(e['archive']))
     bits.append('    <div class="actions">%s</div>' % ''.join(actions))
 
     bits += ['  </div>', '</div>']
@@ -448,6 +456,8 @@ def main():
     <a href="https://github.com/Myndale/Simbuino" target="_blank" rel="noopener">Simbuino emulator</a>
     &middot;
     <a href="https://github.com/joyrider3774/gamebuino_classic_vircon32" target="_blank" rel="noopener">The Vircon32 port</a>
+    &middot;
+    <a href="https://github.com/joyrider3774/gamebuino_classic_sdl" target="_blank" rel="noopener">The SDL port</a>
   </div>
 </header>
 

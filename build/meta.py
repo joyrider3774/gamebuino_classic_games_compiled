@@ -8,10 +8,28 @@ import os, re, json
 
 SRC_ROOT = r"C:\github\gamebuino_classic_source_codes"
 BUILD = r"C:\gbbuild"
-SITE = r"C:\github\gamebuino_classic_games"
+SITE = os.environ.get("GB_SITE", r"C:\github\gamebuino_classic_games_compiled")
 
 ROW = re.compile(r'^\|\s*(.+?)\s*\|\s*(.+?)\s*\|\s*(.+?)\s*\|\s*(.+?)\s*\|\s*$')
 LINK = re.compile(r'\[((?:games|tools)/[^\]]+)\]\(([^)]+)\)\s*(?:\((.*)\))?\s*$')
+
+
+def submodule_paths():
+    """Folders the archive stores as a submodule rather than as real files.
+
+    A submodule is only a pointer: browsing that folder on GitHub shows a commit
+    reference, not the game's source. Linking to it as "archived source" would
+    be a dead end, so those entries link to the upstream repository instead.
+    """
+    out = set()
+    gm = os.path.join(SRC_ROOT, '.gitmodules')
+    if not os.path.isfile(gm):
+        return out
+    for line in open(gm, encoding='utf-8', errors='replace'):
+        m = re.match(r'\s*path\s*=\s*(\S+)', line)
+        if m:
+            out.add(m.group(1).replace('\\', '/').strip('/'))
+    return out
 
 def parse_readme():
     """folder path -> {title, author, license, url, note}"""
@@ -59,6 +77,7 @@ def parse_readme():
 
 def main():
     readme = parse_readme()
+    submodules = submodule_paths()
     targets = json.load(open(os.path.join(BUILD, 'targets.json')))
     results = {}
     for f in os.listdir(os.path.join(BUILD, 'results')):
@@ -94,6 +113,8 @@ def main():
             if mm:
                 flash = {'bytes': int(mm.group(1)), 'pct': int(mm.group(2))}
 
+        folder = t['top'] + '/' + t['entry']
+        is_submodule = folder in submodules
         entries.append({
             'slug': t['slug'],
             'top': t['top'],
@@ -106,8 +127,11 @@ def main():
             'shot': ('screenshots/' + t['slug'] + '.png') if t['slug'] in shots else None,
             'prebuilt': r.get('source') == 'prebuilt',
             'flash': flash,
-            'archive': 'https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/'
-                       + t['top'] + '/' + t['entry'],
+            'submodule': is_submodule,
+            # only entries the archive really holds get an archive link
+            'archive': None if is_submodule else
+                       'https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/'
+                       + folder,
         })
 
     entries.sort(key=lambda e: e['title'].lower())
@@ -119,6 +143,12 @@ def main():
     print('without a screenshot:', [e['slug'] for e in entries if not e['shot']])
     print('without README metadata:', missing_meta)
     print('without a description:', sum(1 for e in entries if not e['desc']))
+    subs = [e for e in entries if e['submodule']]
+    print('submodules (upstream link only):', len(subs),
+          '| really archived here:', len(entries) - len(subs))
+    orphans = [e['slug'] for e in entries if not e['archive'] and not e['url']]
+    if orphans:
+        print('WARNING - no source link at all:', orphans)
 
 
 if __name__ == '__main__':
