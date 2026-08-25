@@ -6,7 +6,8 @@ SITE = os.environ.get("GB_SITE", r"C:\github\gamebuino_classic_games_compiled")
 
 # entries that read a data file off the SD card, so the player mounts the
 # shared card image for them (see mksd.py for what is on it)
-NEEDS_SD = {'B-Rally', 'gamebuino-community-rpg', 'sd_map_test', 'Wolfenduino', 'Gamebookuino'}
+NEEDS_SD = {'B-Rally', 'gamebuino-community-rpg', 'sd_map_test', 'Wolfenduino', 'Gamebookuino',
+             'ThordarsAdventure'}
 
 CSS = """
   :root {

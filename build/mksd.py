@@ -33,6 +33,9 @@ FILES = {
     # Gamebookuino reads the book itself off the card; the build here is DF01,
     # the French edition of Fighting Fantasy's Warlock of Firetop Mountain
     'DF01.LDV': 'games/Gamebookuino/books+LDV/DF01.LDV',
+    # Thordar's Adventure is a binary-only recovery that still shipped
+    # its data file alongside the .HEX
+    'THORDAR.DAT': 'games_precompiled/ThordarsAdventure/THORDAR.DAT',
 }
 
 # a fixed timestamp keeps the image byte-identical across rebuilds

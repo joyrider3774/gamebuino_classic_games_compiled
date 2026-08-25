@@ -231,10 +231,17 @@ It is built by [`build/mksd.py`](build/mksd.py) and holds:
 | `SDMAP.DAT` | sd_map_test | `tools/sd_map_test/` |
 | `WOLF3D.DAT` | Wolfenduino | `games/Wolfenduino/` — its compressed level data |
 | `DF01.LDV` | Gamebookuino | `games/Gamebookuino/books+LDV/` — the book itself |
+| `THORDAR.DAT` | Thordar's Adventure | `games_precompiled/ThordarsAdventure/` |
 
-Without their data both of the last two say so plainly rather than failing
-quietly: Wolfenduino draws "SD CARD MOUNT ERROR", Gamebookuino stops at its
-title screen.
+Without their data these say so plainly rather than failing quietly:
+Wolfenduino draws "SD CARD MOUNT ERROR", Gamebookuino stops at its title
+screen.
+
+Two further binaries name a data file in their own embedded strings but never
+issue a single SD command in the emulator, so their data is **not** bundled:
+`OperationFox` (`EP1.DAT`, 4.8 MB) and `PlayBuino` (`MEDIA.WAV`, 3.2 MB). Both
+were tested with a card image built for them and neither touched it — adding
+8 MB to this repository on that basis would have been guesswork.
 
 The base image was a "superfloppy" — `mkfs.fat` straight onto the device, no
 partition table. Petit FatFs (B-Rally) accepts that, but GB_Fat (Community RPG)
