@@ -36,10 +36,16 @@ of the Nokia 5110 LCD, the buttons, the speaker and an SPI SD card. Upstream it
 ships as an ASP.NET MVC application whose only way to load a game is a file
 picker, so `webemulator/` is a standalone rebuild of it:
 
-- `webemulator/js/` — the emulator core, taken unmodified from upstream, with
-  one exception: `SdDevice.js` now reads a byte past the end of a card image as
-  `0` instead of clocking `undefined` out over SPI. That lets a card image be
-  stored trimmed of its trailing empty space.
+- `webemulator/js/` — the emulator core, taken from upstream with two fixes:
+  - `AtmelContext.js` — `UpdateInterruptFlags()` tested a bare `SREG`, which is
+    undefined (everywhere else the core writes `AtmelContext.SREG`). It threw a
+    `ReferenceError` out of the frame loop, freezing any sketch that reached
+    that path — sokobuino's own released `.hex` stalls on frame 1 without this.
+    Only the name is qualified; the comparison is left exactly as upstream had
+    it, so interrupt behaviour is unchanged.
+  - `SdDevice.js` — reads a byte past the end of a card image as `0` instead of
+    clocking `undefined` out over SPI, so a card image can be stored trimmed of
+    its trailing empty space.
 - `webemulator/player.js` — replaces upstream's `Simulation.js`. Same emulator
   lifecycle, but it loads a game from the URL, adds arrow keys and on-screen
   touch controls, and exposes a small hook the screenshot tool drives.
@@ -86,11 +92,15 @@ Each entry was compiled with the Arduino IDE 1.8.19 AVR toolchain (avr-gcc 7.3)
 for `arduino:avr:uno` — the ATmega328 at 16 MHz — against Gamebuino Classic
 library 0.5.2.
 
-Four entries ship only as a prebuilt `.hex` from their own author and are marked
-`prebuilt hex` on the page: **DarkTower**, **DeathMaze** and
-**Gamebuino-SuperSpaceShooter** have no `.ino` in the archive at all, and
+Five entries ship as a prebuilt `.hex` from their own author and are marked
+`prebuilt hex` on the page. **DarkTower**, **DeathMaze** and
+**Gamebuino-SuperSpaceShooter** have no `.ino` in the archive at all.
 **B-Rally** ships a Simbuino-specific build alongside its normal one, which is
-the one that runs here.
+the one that runs here. **sokobuino** does rebuild cleanly, but the resulting
+binary misbehaves: `current_gui_state` ends up holding 4, which matches no
+branch in its `loop()`, so it draws nothing and its level index lands at 1028
+in a 600-level set. The author's own `.hex` runs correctly, so that ships
+instead.
 
 ### The fixes that were needed
 

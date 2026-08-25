@@ -41,6 +41,11 @@ PREBUILT = {
     'DeathMaze': r'games\DeathMaze\DEATHMAZ.HEX',
     'Gamebuino-SuperSpaceShooter':
         r'games\Gamebuino-SuperSpaceShooter\dist\Debug\Arduino-Windows\superspaceshooter.hex',
+    # A rebuild of sokobuino against the modern toolchain comes up with
+    # corrupted game state -- current_gui_state lands on 4, which matches no
+    # branch in its loop(), so it draws nothing. The author's own .hex runs
+    # correctly, so that is what ships.
+    'sokobuino': r'games\sokobuino\sokobuino.hex',
     # B-Rally's normal build needs a SD-card FAT driver; the author shipped a
     # Simbuino-specific build alongside it, which is the one that runs here
     'B-Rally': r'games\B-Rally\bin\B-Rally_SimbuinoVersion.hex',

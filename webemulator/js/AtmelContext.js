@@ -75,6 +75,11 @@
 				this.NextTimerEvent = this.Clock;
 		},
 
+		// NOTE: the two SREG tests below read `AtmelContext.SREG`; upstream wrote
+		// a bare `SREG`, which is undefined and threw a ReferenceError out of
+		// the emulator's frame loop, freezing any sketch that reached this
+		// path. Only the name is qualified here -- the `== 0` comparison is
+		// left exactly as upstream had it, so interrupt behaviour is unchanged.
 		UpdateInterruptFlags: function()
 		{
 			this.InterruptPending = false;
@@ -82,11 +87,11 @@
 			this.SPI_InterruptPending = false;
 
 			// if the data transmit register is set and interrupts are enabled then trigger a USART interrupt
-			if ((USART.UCSR0A.get_bit(AtmelIO.TXC0) != 0) && (USART.UCSR0B.get_bit(AtmelIO.UDRIE0) != 0) && (SREG.I.get() == 0))
+			if ((USART.UCSR0A.get_bit(AtmelIO.TXC0) != 0) && (USART.UCSR0B.get_bit(AtmelIO.UDRIE0) != 0) && (AtmelContext.SREG.I.get() == 0))
 				this.UDRE_InterruptPending = true;
 
 			// if transfer complete flag is set and interrupts are enabled then trigger an SPI interrupt
-			if ((SPI.SPSR.get_bit(AtmelIO.SPIF) != 0) && (SPI.SPCR.get_bit(AtmelIO.SPIE) != 0) && (SREG.I.get() == 0))
+			if ((SPI.SPSR.get_bit(AtmelIO.SPIF) != 0) && (SPI.SPCR.get_bit(AtmelIO.SPIE) != 0) && (AtmelContext.SREG.I.get() == 0))
 				this.SPI_InterruptPending = true;
 
 			// coalesce all interrupt flags into one so that we don't have to check them all in the inner loop
