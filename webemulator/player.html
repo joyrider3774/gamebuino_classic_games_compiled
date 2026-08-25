@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%274%27 fill=%27%23121716%27/%3E%3Crect x=%274%27 y=%278%27 width=%2724%27 height=%2714%27 fill=%27%23cedde7%27/%3E%3Crect x=%277%27 y=%2711%27 width=%274%27 height=%274%27 fill=%27%23404040%27/%3E%3Crect x=%2714%27 y=%2715%27 width=%274%27 height=%274%27 fill=%27%23404040%27/%3E%3Crect x=%2721%27 y=%2711%27 width=%274%27 height=%274%27 fill=%27%23404040%27/%3E%3C/svg%3E">
+<title>Simbuino4Web</title>
+<style>
+  :root {
+    color-scheme: dark;
+    --bg: #0b0e0b;
+    --panel: #141813;
+    --panel-border: #263323;
+    --text: #e8f2e4;
+    --muted: #9db296;
+    --accent: #7cfc00;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font: 14px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    overflow: hidden;
+    -webkit-user-select: none;
+    user-select: none;
+    touch-action: manipulation;
+  }
+
+  #app {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6em;
+    padding: 0.8em;
+  }
+
+  #title {
+    color: var(--muted);
+    font-size: 0.9em;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    min-height: 1.2em;
+  }
+
+  /* The Gamebuino Classic screen is a 84x48 Nokia 5110 panel. The canvas is
+     kept at its native 84x48 and scaled up by CSS with nearest-neighbour, so
+     every device pixel stays a crisp square. */
+  #screen-frame {
+    background: #10140f;
+    border: 1px solid var(--panel-border);
+    border-radius: 6px;
+    padding: 0.7em;
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.5);
+    max-width: 100%;
+  }
+
+  #canvas {
+    display: block;
+    /* 84:48 is 1.75:1, so a height budget of H allows a width of 1.75H --
+       whichever of the two viewport limits bites first wins. */
+    width: min(92vw, 110vh, 840px);
+    aspect-ratio: 84 / 48;
+    height: auto;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+    background: #8fa79a;
+    outline: none;
+  }
+
+  #status {
+    color: var(--muted);
+    font-size: 0.85em;
+    text-align: center;
+    min-height: 1.2em;
+    max-width: 40em;
+  }
+
+  #status.error { color: #ff8f7a; }
+
+  #bar {
+    display: flex;
+    gap: 0.5em;
+    align-items: center;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  button, .filebtn {
+    background: var(--panel);
+    color: var(--text);
+    border: 1px solid var(--panel-border);
+    border-radius: 5px;
+    padding: 0.35em 0.8em;
+    font: inherit;
+    font-size: 0.85em;
+    cursor: pointer;
+  }
+
+  button:hover, .filebtn:hover { border-color: var(--accent); }
+
+  #hexInput { display: none; }
+
+  #keys {
+    color: var(--muted);
+    font-size: 0.78em;
+    font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+    text-align: center;
+  }
+
+  #keys b { color: var(--accent); font-weight: 600; }
+
+  /* On-screen controls: only worth showing where there is no keyboard. */
+  #touch { display: none; }
+
+  @media (hover: none) and (pointer: coarse) {
+    #touch {
+      display: flex;
+      width: 100%;
+      max-width: 26em;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1em;
+    }
+    #keys { display: none; }
+    #dpad {
+      display: grid;
+      grid-template-columns: repeat(3, 3em);
+      grid-template-rows: repeat(3, 3em);
+    }
+    #dpad .pad:nth-child(1) { grid-area: 1 / 2; }
+    #dpad .pad:nth-child(2) { grid-area: 2 / 1; }
+    #dpad .pad:nth-child(3) { grid-area: 2 / 3; }
+    #dpad .pad:nth-child(4) { grid-area: 3 / 2; }
+    #abc { display: flex; gap: 0.5em; align-items: center; }
+    .pad {
+      background: var(--panel);
+      border: 1px solid var(--panel-border);
+      border-radius: 8px;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1em;
+    }
+    #abc .pad { width: 3em; height: 3em; border-radius: 50%; }
+    .pad.on { background: var(--accent); color: #0b0e0b; }
+  }
+</style>
+</head>
+<body>
+
+<div id="app">
+  <div id="title"></div>
+
+  <div id="screen-frame">
+    <canvas id="canvas" width="84" height="48" tabindex="0"></canvas>
+  </div>
+
+  <div id="status"></div>
+
+  <div id="touch">
+    <div id="dpad">
+      <div class="pad" data-btn="Up">&#9650;</div>
+      <div class="pad" data-btn="Left">&#9664;</div>
+      <div class="pad" data-btn="Right">&#9654;</div>
+      <div class="pad" data-btn="Down">&#9660;</div>
+    </div>
+    <div id="abc">
+      <div class="pad" data-btn="C">C</div>
+      <div class="pad" data-btn="B">B</div>
+      <div class="pad" data-btn="A">A</div>
+    </div>
+  </div>
+
+  <div id="bar">
+    <button id="reset" type="button">Reset</button>
+    <button id="sound" type="button">Sound: on</button>
+    <label class="filebtn">Load .hex<input type="file" id="hexInput" accept=".hex"></label>
+  </div>
+
+  <div id="keys">
+    <b>Arrows</b> or <b>ESDF</b> d-pad &nbsp;&middot;&nbsp;
+    <b>X</b>/<b>K</b> A &nbsp;&middot;&nbsp;
+    <b>Z</b>/<b>L</b> B &nbsp;&middot;&nbsp;
+    <b>C</b>/<b>R</b> C
+  </div>
+</div>
+
+<script src="js/jquery.min.js"></script>
+<script src="js/class.js"></script>
+<script src="js/MemoryMappedRegister.js"></script>
+<script src="js/AtmelRegisters.js"></script>
+<script src="js/FlagsRegister.js"></script>
+<script src="js/AtmelIO.js"></script>
+<script src="js/AtmelContext.js"></script>
+<script src="js/AtmelProcessor.js"></script>
+<script src="js/ADC.js"></script>
+<script src="js/Buttons.js"></script>
+<script src="js/SPI.js"></script>
+<script src="js/USART.js"></script>
+<script src="js/EEPROM.js"></script>
+<script src="js/Lcd.js"></script>
+<script src="js/SdDevice.js"></script>
+<script src="js/AudioPlayer.js"></script>
+<script src="js/HexDecoder.js"></script>
+<script src="js/Bootloader.js"></script>
+<script src="js/Loader.js"></script>
+<script src="player.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,1690 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%274%27 fill=%27%23121716%27/%3E%3Crect x=%274%27 y=%278%27 width=%2724%27 height=%2714%27 fill=%27%23cedde7%27/%3E%3Crect x=%277%27 y=%2711%27 width=%274%27 height=%274%27 fill=%27%23404040%27/%3E%3Crect x=%2714%27 y=%2715%27 width=%274%27 height=%274%27 fill=%27%23404040%27/%3E%3Crect x=%2721%27 y=%2711%27 width=%274%27 height=%274%27 fill=%27%23404040%27/%3E%3C/svg%3E">
+<title>Gamebuino Classic Games</title>
+<meta name="description" content="105 Gamebuino Classic games and 14 tools, compiled from archived source and playable in the browser.">
+<style>
+  :root {
+    color-scheme: dark;
+    --bg: #0a0d0c;
+    --panel: #121716;
+    --panel-border: #22302c;
+    --text: #e6efec;
+    --muted: #93a8a2;
+    /* the Nokia 5110 panel the Gamebuino Classic uses: unlit green-grey,
+       lit blue-white backlight, near-black pixels */
+    --lcd-off: #8fa79a;
+    --lcd-on: #cedde7;
+    --lcd-ink: #404040;
+    --accent: #7fd4c1;
+    --link: #7fd4ff;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 16px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+
+  a { color: var(--link); }
+
+  header {
+    padding: 3em 1.5em 1.5em;
+    text-align: center;
+    background:
+      radial-gradient(ellipse at top, rgba(127, 212, 193, 0.10), transparent 60%),
+      var(--bg);
+    border-bottom: 1px solid var(--panel-border);
+  }
+
+  header h1 {
+    margin: 0 0 0.3em;
+    font-size: 2em;
+    letter-spacing: 0.02em;
+  }
+
+  header h1 .logo {
+    display: inline-block;
+    padding: 0.1em 0.45em;
+    border-radius: 4px;
+    background: var(--lcd-on);
+    color: #2b2b2b;
+    font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+    letter-spacing: -0.02em;
+  }
+
+  header p {
+    margin: 0.3em auto;
+    color: var(--muted);
+    max-width: 46em;
+  }
+
+  header .links { margin-top: 1em; font-size: 0.95em; }
+  header .links a { margin: 0 0.6em; }
+
+  .toolbar {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    background: rgba(10, 13, 12, 0.94);
+    backdrop-filter: blur(6px);
+    border-bottom: 1px solid var(--panel-border);
+    padding: 0.7em 1.5em;
+    display: flex;
+    gap: 0.6em;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .toolbar input[type=search] {
+    background: var(--panel);
+    border: 1px solid var(--panel-border);
+    border-radius: 5px;
+    color: var(--text);
+    padding: 0.45em 0.8em;
+    font: inherit;
+    font-size: 0.9em;
+    min-width: 16em;
+  }
+
+  .toolbar input[type=search]:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+
+  .toolbar .tab {
+    background: var(--panel);
+    border: 1px solid var(--panel-border);
+    border-radius: 5px;
+    color: var(--muted);
+    padding: 0.45em 0.9em;
+    font: inherit;
+    font-size: 0.9em;
+    cursor: pointer;
+  }
+
+  .toolbar .tab[aria-pressed="true"] {
+    color: #0a0d0c;
+    background: var(--accent);
+    border-color: var(--accent);
+    font-weight: 600;
+  }
+
+  .toolbar .count { color: var(--muted); font-size: 0.85em; }
+
+  main { max-width: 1280px; margin: 0 auto; padding: 2em 1.5em 4em; }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 1.3em;
+  }
+
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--panel-border);
+    border-radius: 8px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.15s ease, border-color 0.15s ease;
+  }
+
+  .card:hover { transform: translateY(-3px); border-color: var(--accent); }
+  .card[hidden] { display: none; }
+
+  /* Screenshots are native 84x48 upscaled 4x; keep them blocky rather than
+     letting the browser smooth them into mush. */
+  .card .shot {
+    width: 100%;
+    aspect-ratio: 84 / 48;
+    display: block;
+    object-fit: cover;
+    background: var(--lcd-on);
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+  }
+
+  .card .noshot {
+    width: 100%;
+    aspect-ratio: 84 / 48;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--lcd-off);
+    color: #4a4a4a;
+    font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+    font-size: 0.8em;
+    text-align: center;
+    padding: 1em;
+  }
+
+  .card .body {
+    padding: 0.85em 1em 1em;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    gap: 0.35em;
+  }
+
+  .card h2 { margin: 0; font-size: 1.02em; line-height: 1.3; }
+  .card h2 a { color: var(--text); text-decoration: none; }
+  .card h2 a:hover { color: var(--accent); }
+
+  .card .by { color: var(--muted); font-size: 0.85em; }
+  .card .desc { color: var(--muted); font-size: 0.85em; margin: 0.15em 0 0; }
+
+  .card .meta {
+    color: #6f837d;
+    font-size: 0.75em;
+    margin-top: auto;
+    padding-top: 0.7em;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4em 0.8em;
+  }
+
+  .card .actions {
+    display: flex;
+    gap: 0.6em;
+    align-items: center;
+    flex-wrap: wrap;
+    padding-top: 0.7em;
+  }
+
+  .play-button {
+    display: inline-block;
+    background: var(--accent);
+    color: #08110e;
+    font-weight: 600;
+    text-decoration: none;
+    padding: 0.4em 0.85em;
+    border-radius: 5px;
+    font-size: 0.88em;
+  }
+
+  .play-button:hover { background: #a5efe0; }
+
+  .src-link { font-size: 0.82em; color: var(--muted); text-decoration: none; }
+  .src-link:hover { color: var(--link); }
+
+  .badge {
+    border: 1px solid var(--panel-border);
+    border-radius: 3px;
+    padding: 0 0.4em;
+    color: var(--muted);
+  }
+
+  #empty { color: var(--muted); text-align: center; padding: 3em 0; }
+  #empty[hidden] { display: none; }
+
+  footer {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 1.5em 3em;
+    color: var(--muted);
+    font-size: 0.85em;
+  }
+
+  footer hr { border: none; border-top: 1px solid var(--panel-border); margin: 2em 0 1.2em; }
+  footer h3 { color: var(--text); font-size: 0.95em; margin: 1.4em 0 0.4em; }
+
+  footer .controls-table {
+    display: inline-grid;
+    grid-template-columns: repeat(2, auto);
+    gap: 0.2em 1.2em;
+    margin: 0.6em 0 0;
+    font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  }
+
+  footer .controls-table span.key { color: var(--accent); }
+
+  #game-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.9);
+    padding: 2vh 2vw;
+  }
+
+  #game-overlay.hidden { display: none; }
+
+  #game-modal {
+    position: relative;
+    width: 760px;
+    height: 620px;
+    max-width: 100%;
+    max-height: 100%;
+    background: #000;
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    border-radius: 6px;
+    overflow: hidden;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+  }
+
+  #game-frame { width: 100%; height: 100%; border: 0; display: block; }
+
+  #game-close-button {
+    position: absolute;
+    top: 0.4em;
+    right: 0.5em;
+    z-index: 1;
+    background: rgba(0, 0, 0, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    color: #eee;
+    border-radius: 4px;
+    width: 1.8em;
+    height: 1.8em;
+    line-height: 1.6em;
+    text-align: center;
+    padding: 0;
+    font-size: 1em;
+    cursor: pointer;
+  }
+
+  #game-close-button:hover { background: rgba(0, 0, 0, 0.85); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1><span class="logo">GAMEBUINO</span> Classic &mdash; playable in your browser</h1>
+  <p>Every Gamebuino Classic game and tool whose source could still be found, compiled
+     from that source and running here on Myndale&rsquo;s Simbuino HTML5 emulator.
+     The console was an ATmega328 handheld with an 84&times;48 Nokia&nbsp;5110 screen,
+     and its community wiki &mdash; along with most of what it linked to &mdash; is long gone from the live web.</p>
+  <p><strong>105</strong> games and <strong>14</strong> tools. Nothing here is my own work:
+     every entry is someone else&rsquo;s game, credited below with its own licence.</p>
+  <div class="links">
+    <a href="https://github.com/joyrider3774/gamebuino_classic_source_codes" target="_blank" rel="noopener">The source archive</a>
+    &middot;
+    <a href="https://github.com/Myndale/Simbuino" target="_blank" rel="noopener">Simbuino emulator</a>
+    &middot;
+    <a href="https://github.com/joyrider3774/gamebuino_classic_vircon32" target="_blank" rel="noopener">The Vircon32 port</a>
+  </div>
+</header>
+
+<div class="toolbar">
+  <input type="search" id="search" placeholder="Search by name, author or description&hellip;" autocomplete="off">
+  <button class="tab" type="button" data-kind="all" aria-pressed="true">All</button>
+  <button class="tab" type="button" data-kind="games" aria-pressed="false">Games (105)</button>
+  <button class="tab" type="button" data-kind="tools" aria-pressed="false">Tools (14)</button>
+  <span class="count" id="count"></span>
+</div>
+
+<main>
+  <div class="grid">
+
+      <div class="card" data-kind="games" data-search="101 starships zoglu  101starships">
+        <img class="shot" src="screenshots/101Starships.png" alt="101 Starships screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/101Starships.hex&amp;title=101+Starships" data-play>101 Starships</a></h2>
+          <div class="by">by Zoglu</div>
+          <div class="meta"><span class="badge" title="None specified">None specified</span><span>25.2 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/101Starships.hex&amp;title=101+Starships" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/games/101Starships" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-search="a to k carlos mari  a2k">
+        <img class="shot" src="screenshots/A2K.png" alt="A to K screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/A2K.hex&amp;title=A+to+K" data-play>A to K</a></h2>
+          <div class="by">by Carlos Mari</div>
+          <div class="meta"><span class="badge" title="CC-BY 4.0 (+ a non-standard no-selling note)">CC-BY 4.0…</span><span>12.7 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/A2K.hex&amp;title=A+to+K" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/games/A2K" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-search="agaruino ogbaba an agar.io-style clone agaruino">
+        <img class="shot" src="screenshots/Agaruino.png" alt="Agaruino screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/Agaruino.hex&amp;title=Agaruino" data-play>Agaruino</a></h2>
+          <div class="by">by ogbaba</div>
+          <p class="desc">An agar.io-style clone</p>
+          <div class="meta"><span class="badge" title="GPLv3">GPLv3</span><span>13.1 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/Agaruino.hex&amp;title=Agaruino" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/ogbaba/Agaruino" target="_blank" rel="noopener">Original repo</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/games/Agaruino" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-search="aimbuino baptiste pouget (hosted under ogbaba&#x27;s account) &quot;bsktuino&quot;, an aiming/basketball game; a real 2016 school project, &quot;isn project 2016, lorgues&quot;, per its own readme - explains the shared hosting aimbuino">
+        <img class="shot" src="screenshots/Aimbuino.png" alt="Aimbuino screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/Aimbuino.hex&amp;title=Aimbuino" data-play>Aimbuino</a></h2>
+          <div class="by">by Baptiste Pouget (hosted under ogbaba&#x27;s account)</div>
+          <p class="desc">&quot;Bsktuino&quot;, an aiming/basketball game; a real 2016 school project, &quot;ISN Project 2016, Lorgues&quot;, per its own README - explains the shared hosting</p>
+          <div class="meta"><span class="badge" title="GPLv3">GPLv3</span><span>16.3 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/Aimbuino.hex&amp;title=Aimbuino" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/ogbaba/Aimbuino" target="_blank" rel="noopener">Original repo</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/games/Aimbuino" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-search="another2048 grafmakulader2te a genuinely different 2048 codebase from the already-archived gamebuino2048; the repo also carries a separate meta_version branch for the unrelated meta board — the default main branch archived here is the real classic one another2048">
+        <img class="shot" src="screenshots/another2048.png" alt="another2048 screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/another2048.hex&amp;title=another2048" data-play>another2048</a></h2>
+          <div class="by">by grafMakulaDer2te</div>
+          <p class="desc">A genuinely different 2048 codebase from the already-archived Gamebuino2048; the repo also carries a separate meta_version branch for the unrelated META board — the default main branch archived here is the real Classic one</p>
+          <div class="meta"><span class="badge" title="None specified">None specified</span><span>14.6 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/another2048.hex&amp;title=another2048" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/grafMakulaDer2te/another2048" target="_blank" rel="noopener">Original repo</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/games/another2048" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-search="armageddon wuuff  armageddon">
+        <img class="shot" src="screenshots/armageddon.png" alt="armageddon screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/armageddon.hex&amp;title=armageddon" data-play>armageddon</a></h2>
+          <div class="by">by wuuff</div>
+          <div class="meta"><span class="badge" title="GPLv3">GPLv3</span><span>18.8 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/armageddon.hex&amp;title=armageddon" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/wuuff/armageddon" target="_blank" rel="noopener">Original repo</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/games/armageddon" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-search="artillery frakasss  artillery">
+        <img class="shot" src="screenshots/Artillery.png" alt="Artillery screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/Artillery.hex&amp;title=Artillery" data-play>Artillery</a></h2>
+          <div class="by">by Frakasss</div>
+          <div class="meta"><span class="badge" title="None specified">None specified</span><span>22.7 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/Artillery.hex&amp;title=Artillery" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/Frakasss/Artillery" target="_blank" rel="noopener">Original repo</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/games/Artillery" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-search="asterocks yoda zhang  yoda-asterocks">
+        <img class="shot" src="screenshots/yoda-asterocks.png" alt="Asterocks screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/yoda-asterocks.hex&amp;title=Asterocks" data-play>Asterocks</a></h2>
+          <div class="by">by Yoda Zhang</div>
+          <div class="meta"><span class="badge" title="None specified">None specified</span><span>19.7 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/yoda-asterocks.hex&amp;title=Asterocks" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/games/yoda-asterocks" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-search="asteroidripper ripper121  asteroid-ripper121">
+        <img class="shot" src="screenshots/asteroid-ripper121.png" alt="AsteroidRipper screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/asteroid-ripper121.hex&amp;title=AsteroidRipper" data-play>AsteroidRipper</a></h2>
+          <div class="by">by ripper121</div>
+          <div class="meta"><span class="badge" title="None specified">None specified</span><span>17.0 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/asteroid-ripper121.hex&amp;title=AsteroidRipper" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/games/asteroid-ripper121" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-search="b-rally scmar  b-rally">
+        <img class="shot" src="screenshots/B-Rally.png" alt="B-Rally screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/B-Rally.hex&amp;title=B-Rally&amp;sd=sdcard.img" data-play>B-Rally</a></h2>
+          <div class="by">by scmar</div>
+          <div class="meta"><span class="badge" title="MIT">MIT</span><span class="badge" title="Shipped by its author as a prebuilt .hex; not rebuilt here">prebuilt&nbsp;hex</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/B-Rally.hex&amp;title=B-Rally&amp;sd=sdcard.img" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/scmar/B-Rally" target="_blank" rel="noopener">Original repo</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/games/B-Rally" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-search="bang! bang! rackhamlenoir  gamebuino-bangbang">
+        <img class="shot" src="screenshots/gamebuino-bangbang.png" alt="Bang! Bang! screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/gamebuino-bangbang.hex&amp;title=Bang!+Bang!" data-play>Bang! Bang!</a></h2>
+          <div class="by">by RackhamLeNoir</div>
+          <div class="meta"><span class="badge" title="GPLv3">GPLv3</span><span>14.7 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/gamebuino-bangbang.hex&amp;title=Bang!+Bang!" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/RackhamLeNoir/gamebuino-bangbang" target="_blank" rel="noopener">Original repo</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/games/gamebuino-bangbang" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-search="bigblackbox studiocraftapps  bigblackbox">
+        <img class="shot" src="screenshots/BigBlackBox.png" alt="BigBlackBox screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/BigBlackBox.hex&amp;title=BigBlackBox" data-play>BigBlackBox</a></h2>
+          <div class="by">by STUDIOCRAFTapps</div>
+          <div class="meta"><span class="badge" title="Custom (free to modify, do not sell this game)">Custom…</span><span>25.5 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/BigBlackBox.hex&amp;title=BigBlackBox" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/akkera102/08_gamebuino" target="_blank" rel="noopener">Original repo</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/games/BigBlackBox" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-search="blob attack ludumdaredevelopment  blob-attack">
+        <img class="shot" src="screenshots/Blob-Attack.png" alt="Blob Attack screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/Blob-Attack.hex&amp;title=Blob+Attack" data-play>Blob Attack</a></h2>
+          <div class="by">by LudumDareDevelopment</div>
+          <div class="meta"><span class="badge" title="None specified">None specified</span><span>16.0 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/Blob-Attack.hex&amp;title=Blob+Attack" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/LudumDareDevelopment/Blob-Attack" target="_blank" rel="noopener">Original repo</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/games/Blob-Attack" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-search="blockdude sorunome  blockdude-gamebuino">
+        <img class="shot" src="screenshots/blockdude-gamebuino.png" alt="blockdude screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/blockdude-gamebuino.hex&amp;title=blockdude" data-play>blockdude</a></h2>
+          <div class="by">by Sorunome</div>
+          <div class="meta"><span class="badge" title="None specified">None specified</span><span>16.7 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/blockdude-gamebuino.hex&amp;title=blockdude" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/Sorunome/blockdude-gamebuino" target="_blank" rel="noopener">Original repo</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/games/blockdude-gamebuino" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-search="blocksbuino frthery  blocksbuino">
+        <img class="shot" src="screenshots/BlocksBuino.png" alt="BlocksBuino screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/BlocksBuino.hex&amp;title=BlocksBuino" data-play>BlocksBuino</a></h2>
+          <div class="by">by frthery</div>
+          <div class="meta"><span class="badge" title="None specified">None specified</span><span>21.4 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/BlocksBuino.hex&amp;title=BlocksBuino" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/frthery/BlocksBuino" target="_blank" rel="noopener">Original repo</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/games/BlocksBuino" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-search="bomber clement83  bomber">
+        <img class="shot" src="screenshots/Bomber.png" alt="Bomber screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/Bomber.hex&amp;title=Bomber" data-play>Bomber</a></h2>
+          <div class="by">by Clement83</div>
+          <div class="meta"><span class="badge" title="None specified">None specified</span><span>22.2 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/Bomber.hex&amp;title=Bomber" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/Clement83/Bomber" target="_blank" rel="noopener">Original repo</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/games/Bomber" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-search="breakout ripper ripper121  breakout-ripper121">
+        <img class="shot" src="screenshots/breakout-ripper121.png" alt="Breakout Ripper screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/breakout-ripper121.hex&amp;title=Breakout+Ripper" data-play>Breakout Ripper</a></h2>
+          <div class="by">by ripper121</div>
+          <div class="meta"><span class="badge" title="None specified">None specified</span><span>12.3 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/breakout-ripper121.hex&amp;title=Breakout+Ripper" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/games/breakout-ripper121" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-search="bub smogheap  bub">
+        <img class="shot" src="screenshots/bub.png" alt="Bub screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/bub.hex&amp;title=Bub" data-play>Bub</a></h2>
+          <div class="by">by smogheap</div>
+          <div class="meta"><span class="badge" title="GPLv3">GPLv3</span><span>21.2 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/bub.hex&amp;title=Bub" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/games/bub" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-search="castle defence kh9282  castledefence">
+        <img class="shot" src="screenshots/CastleDefence.png" alt="Castle Defence screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/CastleDefence.hex&amp;title=Castle+Defence" data-play>Castle Defence</a></h2>
+          <div class="by">by kh9282</div>
+          <div class="meta"><span class="badge" title="None specified">None specified</span><span>25.7 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/CastleDefence.hex&amp;title=Castle+Defence" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/kh9282/CastleDefence" target="_blank" rel="noopener">Original repo</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/games/CastleDefence" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="tools" data-search="chip-8-gamebuino wuuff a real chip-8 interpreter for gamebuino classic chip-8-gamebuino">
+        <img class="shot" src="screenshots/chip-8-gamebuino.png" alt="chip-8-gamebuino screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../tools/chip-8-gamebuino.hex&amp;title=chip-8-gamebuino" data-play>chip-8-gamebuino</a></h2>
+          <div class="by">by wuuff</div>
+          <p class="desc">A real CHIP-8 interpreter for Gamebuino Classic</p>
+          <div class="meta"><span class="badge" title="GPLv3">GPLv3</span><span>25.9 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../tools/chip-8-gamebuino.hex&amp;title=chip-8-gamebuino" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/wuuff/chip-8-gamebuino" target="_blank" rel="noopener">Original repo</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/tools/chip-8-gamebuino" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-search="community rpg sorunome a genuinely substantial class-based rpg with real eeprom + sd-card save data gamebuino-community-rpg">
+        <img class="shot" src="screenshots/gamebuino-community-rpg.png" alt="Community RPG screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/gamebuino-community-rpg.hex&amp;title=Community+RPG&amp;sd=sdcard.img" data-play>Community RPG</a></h2>
+          <div class="by">by Sorunome</div>
+          <p class="desc">A genuinely substantial class-based RPG with real EEPROM + SD-card save data</p>
+          <div class="meta"><span class="badge" title="None specified">None specified</span><span>20.7 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/gamebuino-community-rpg.hex&amp;title=Community+RPG&amp;sd=sdcard.img" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/Sorunome/gamebuino-community-rpg" target="_blank" rel="noopener">Original repo</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/games/gamebuino-community-rpg" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-search="conduit adekto  conduit">
+        <img class="shot" src="screenshots/conduit.png" alt="conduit screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/conduit.hex&amp;title=conduit" data-play>conduit</a></h2>
+          <div class="by">by adekto</div>
+          <div class="meta"><span class="badge" title="MIT">MIT</span><span>13.6 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/conduit.hex&amp;title=conduit" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/adekto/conduit" target="_blank" rel="noopener">Original repo</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/games/conduit" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-search="copter clement83  copter">
+        <img class="shot" src="screenshots/Copter.png" alt="Copter screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/Copter.hex&amp;title=Copter" data-play>Copter</a></h2>
+          <div class="by">by Clement83</div>
+          <div class="meta"><span class="badge" title="None specified">None specified</span><span>23.8 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/Copter.hex&amp;title=Copter" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/Clement83/Copter" target="_blank" rel="noopener">Original repo</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/games/Copter" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-search="copterstrike frakasss  copterstrike">
+        <img class="shot" src="screenshots/CopterStrike.png" alt="CopterStrike screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/CopterStrike.hex&amp;title=CopterStrike" data-play>CopterStrike</a></h2>
+          <div class="by">by Frakasss</div>
+          <div class="meta"><span class="badge" title="None specified">None specified</span><span>28.0 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/CopterStrike.hex&amp;title=CopterStrike" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/Frakasss/CopterStrike" target="_blank" rel="noopener">Original repo</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/games/CopterStrike" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-search="crabator rodot  crabator">
+        <img class="shot" src="screenshots/Crabator.png" alt="Crabator screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/Crabator.hex&amp;title=Crabator" data-play>Crabator</a></h2>
+          <div class="by">by Rodot</div>
+          <div class="meta"><span class="badge" title="None specified">None specified</span><span>21.5 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/Crabator.hex&amp;title=Crabator" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/Rodot/Crabator" target="_blank" rel="noopener">Original repo</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/games/Crabator" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-search="crazycar baptiste pouget  crazycar-gamebuino">
+        <img class="shot" src="screenshots/CRAZYCAR-Gamebuino.png" alt="CrazyCar screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/CRAZYCAR-Gamebuino.hex&amp;title=CrazyCar" data-play>CrazyCar</a></h2>
+          <div class="by">by Baptiste Pouget</div>
+          <div class="meta"><span class="badge" title="GPLv3">GPLv3</span><span>13.1 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/CRAZYCAR-Gamebuino.hex&amp;title=CrazyCar" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/baptistepouget/CRAZYCAR-Gamebuino" target="_blank" rel="noopener">Original repo</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/games/CRAZYCAR-Gamebuino" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-search="crazytown clement quintard  crazytown">
+        <img class="shot" src="screenshots/CrazyTown.png" alt="CrazyTown screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/CrazyTown.hex&amp;title=CrazyTown" data-play>CrazyTown</a></h2>
+          <div class="by">by Clement Quintard</div>
+          <div class="meta"><span class="badge" title="None specified">None specified</span><span>25.8 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/CrazyTown.hex&amp;title=CrazyTown" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/Clement83/CrazyTown" target="_blank" rel="noopener">Original repo</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/games/CrazyTown" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-search="cruiser specht a genuine 3d shooter, the most structurally unusual find in this archive; ships its own from-scratch reimplementation of the gamebuino api rather than the real library cruiser">
+        <div class="noshot">no preview<br>available</div>
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/cruiser.hex&amp;title=cruiser" data-play>cruiser</a></h2>
+          <div class="by">by specht</div>
+          <p class="desc">A genuine 3D shooter, the most structurally unusual find in this archive; ships its own from-scratch reimplementation of the Gamebuino API rather than the real library</p>
+          <div class="meta"><span class="badge" title="None specified">None specified</span><span>23.9 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/cruiser.hex&amp;title=cruiser" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/specht/cruiser" target="_blank" rel="noopener">Original repo</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/games/cruiser" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-search="dark shmup clement83 a real shoot-em-up darkshmup">
+        <img class="shot" src="screenshots/DarkShmup.png" alt="Dark Shmup screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/DarkShmup.hex&amp;title=Dark+Shmup" data-play>Dark Shmup</a></h2>
+          <div class="by">by Clement83</div>
+          <p class="desc">A real shoot-em-up</p>
+          <div class="meta"><span class="badge" title="None specified">None specified</span><span>16.3 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/DarkShmup.hex&amp;title=Dark+Shmup" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/Clement83/DarkShmup" target="_blank" rel="noopener">Original repo</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/games/DarkShmup" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-search="dark tower marcus hutchings  darktower">
+        <img class="shot" src="screenshots/DarkTower.png" alt="Dark Tower screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/DarkTower.hex&amp;title=Dark+Tower" data-play>Dark Tower</a></h2>
+          <div class="by">by Marcus Hutchings</div>
+          <div class="meta"><span class="badge" title="GPLv3">GPLv3</span><span class="badge" title="Shipped by its author as a prebuilt .hex; not rebuilt here">prebuilt&nbsp;hex</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/DarkTower.hex&amp;title=Dark+Tower" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/marcushutchings/DarkTower" target="_blank" rel="noopener">Original repo</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/games/DarkTower" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-search="deathmaze msevilgenius  deathmaze">
+        <img class="shot" src="screenshots/DeathMaze.png" alt="DeathMaze screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/DeathMaze.hex&amp;title=DeathMaze" data-play>DeathMaze</a></h2>
+          <div class="by">by msevilgenius</div>
+          <div class="meta"><span class="badge" title="None specified">None specified</span><span class="badge" title="Shipped by its author as a prebuilt .hex; not rebuilt here">prebuilt&nbsp;hex</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/DeathMaze.hex&amp;title=DeathMaze" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/games/DeathMaze" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-search="descent into hell etienne72230  descentintoheel">
+        <img class="shot" src="screenshots/DescentIntoHeel.png" alt="Descent into Hell screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/DescentIntoHeel.hex&amp;title=Descent+into+Hell" data-play>Descent into Hell</a></h2>
+          <div class="by">by etienne72230</div>
+          <div class="meta"><span class="badge" title="None specified">None specified</span><span>25.4 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/DescentIntoHeel.hex&amp;title=Descent+into+Hell" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/etienne72230/DescentIntoHeel" target="_blank" rel="noopener">Original repo</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/games/DescentIntoHeel" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-search="digger scmar  digger">
+        <img class="shot" src="screenshots/Digger.png" alt="Digger screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/Digger.hex&amp;title=Digger" data-play>Digger</a></h2>
+          <div class="by">by scmar</div>
+          <div class="meta"><span class="badge" title="None specified">None specified</span><span>27.9 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/Digger.hex&amp;title=Digger" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/scmar/Digger" target="_blank" rel="noopener">Original repo</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/games/Digger" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-search="duel clement83 a sword-duel game with genuine two-cartridge wire.h master/slave multiplayer duel">
+        <img class="shot" src="screenshots/Duel.png" alt="Duel screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/Duel.hex&amp;title=Duel" data-play>Duel</a></h2>
+          <div class="by">by Clement83</div>
+          <p class="desc">A sword-duel game with genuine two-cartridge Wire.h master/slave multiplayer</p>
+          <div class="meta"><span class="badge" title="None specified">None specified</span><span>15.0 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/Duel.hex&amp;title=Duel" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/Clement83/Duel" target="_blank" rel="noopener">Original repo</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/games/Duel" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-search="elventure wuuff a real, class-based zelda-like dungeon crawler elventure">
+        <img class="shot" src="screenshots/Elventure.png" alt="Elventure screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/Elventure.hex&amp;title=Elventure" data-play>Elventure</a></h2>
+          <div class="by">by wuuff</div>
+          <p class="desc">A real, class-based Zelda-like dungeon crawler</p>
+          <div class="meta"><span class="badge" title="GPLv3">GPLv3</span><span>18.4 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/Elventure.hex&amp;title=Elventure" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/wuuff/elventure-gamebuino" target="_blank" rel="noopener">Original repo</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/games/Elventure" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-search="fifteen tnxec2 a classic sliding 15-puzzle with real eeprom save; a genuinely different codebase from the already-archived taquin, same concept, different author; found by checking this author&#x27;s own full repo list directly rather than trusting a paginated listing view, which had been silently dropping entries fifteen">
+        <img class="shot" src="screenshots/fifteen.png" alt="Fifteen screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/fifteen.hex&amp;title=Fifteen" data-play>Fifteen</a></h2>
+          <div class="by">by Tnxec2</div>
+          <p class="desc">A classic sliding 15-puzzle with real EEPROM save; a genuinely different codebase from the already-archived Taquin, same concept, different author; found by checking this author&#x27;s own full repo list directly rather than trusting a paginated listing view, which had been silently dropping entries</p>
+          <div class="meta"><span class="badge" title="None specified">None specified</span><span>13.3 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/fifteen.hex&amp;title=Fifteen" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/Tnxec2/fifteen" target="_blank" rel="noopener">Original repo</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/games/fifteen" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-search="firebuino! ladbsoft targets the related makerbuino board makerbuino-firebuino">
+        <img class="shot" src="screenshots/makerbuino-firebuino.png" alt="FireBuino! screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/makerbuino-firebuino.hex&amp;title=FireBuino!" data-play>FireBuino!</a></h2>
+          <div class="by">by LADBSoft</div>
+          <p class="desc">Targets the related MakerBuino board</p>
+          <div class="meta"><span class="badge" title="LGPLv3">LGPLv3</span><span>20.1 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/makerbuino-firebuino.hex&amp;title=FireBuino!" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/ladbsoft/makerbuino-firebuino" target="_blank" rel="noopener">Original repo</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/games/makerbuino-firebuino" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-search="firemen vicking69  firemen">
+        <img class="shot" src="screenshots/firemen.png" alt="Firemen screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/firemen.hex&amp;title=Firemen" data-play>Firemen</a></h2>
+          <div class="by">by Vicking69</div>
+          <div class="meta"><span class="badge" title="GPLv2">GPLv2</span><span>12.5 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/firemen.hex&amp;title=Firemen" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/Vicking69/firemen" target="_blank" rel="noopener">Original repo</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/games/firemen" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-search="flappy birdo forklift5  flappybirdo">
+        <img class="shot" src="screenshots/FlappyBirdo.png" alt="Flappy Birdo screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/FlappyBirdo.hex&amp;title=Flappy+Birdo" data-play>Flappy Birdo</a></h2>
+          <div class="by">by Forklift5</div>
+          <div class="meta"><span class="badge" title="None specified">None specified</span><span>16.6 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/FlappyBirdo.hex&amp;title=Flappy+Birdo" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/Forklift5/FlappyBirdo" target="_blank" rel="noopener">Original repo</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/games/FlappyBirdo" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-search="footlol baptiste pouget (hosted under ogbaba&#x27;s account) a small football game footlol-gamebuino">
+        <img class="shot" src="screenshots/FOOTLOL-Gamebuino.png" alt="Footlol screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/FOOTLOL-Gamebuino.hex&amp;title=Footlol" data-play>Footlol</a></h2>
+          <div class="by">by Baptiste Pouget (hosted under ogbaba&#x27;s account)</div>
+          <p class="desc">A small football game</p>
+          <div class="meta"><span class="badge" title="GPLv3">GPLv3</span><span>16.4 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/FOOTLOL-Gamebuino.hex&amp;title=Footlol" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/ogbaba/FOOTLOL-Gamebuino" target="_blank" rel="noopener">Original repo</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/games/FOOTLOL-Gamebuino" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-search="frogger (makerbuino port) andy jackson  frogger_makerbuino">
+        <img class="shot" src="screenshots/Frogger_MAKERbuino.png" alt="Frogger (MAKERbuino port) screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/Frogger_MAKERbuino.hex&amp;title=Frogger+(MAKERbuino+port)" data-play>Frogger (MAKERbuino port)</a></h2>
+          <div class="by">by Andy Jackson</div>
+          <div class="meta"><span class="badge" title="None specified">None specified</span><span>16.6 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/Frogger_MAKERbuino.hex&amp;title=Frogger+(MAKERbuino+port)" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/games/Frogger_MAKERbuino" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="tools" data-search="gambipaint trist06git a drawing/paint tool gambipaint">
+        <img class="shot" src="screenshots/GambiPaint.png" alt="GambiPaint screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../tools/GambiPaint.hex&amp;title=GambiPaint" data-play>GambiPaint</a></h2>
+          <div class="by">by Trist06Git</div>
+          <p class="desc">A drawing/paint tool</p>
+          <div class="meta"><span class="badge" title="None specified">None specified</span><span>15.0 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../tools/GambiPaint.hex&amp;title=GambiPaint" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/Trist06Git/GambiPaint" target="_blank" rel="noopener">Original repo</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/tools/GambiPaint" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-search="gamebuino (stijncaerts) — pong stijn caerts bundles a real local 2-player pong and a snake; the snake needs a real external ivanseidel/linkedlist arduino library stijncaerts-gamebuino-pong">
+        <img class="shot" src="screenshots/StijnCaerts-Gamebuino-Pong.png" alt="Gamebuino (StijnCaerts) — Pong screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/StijnCaerts-Gamebuino-Pong.hex&amp;title=Gamebuino+(StijnCaerts)+—+Pong" data-play>Gamebuino (StijnCaerts) — Pong</a></h2>
+          <div class="by">by Stijn Caerts</div>
+          <p class="desc">Bundles a real local 2-player Pong and a Snake; the Snake needs a real external ivanseidel/LinkedList Arduino library</p>
+          <div class="meta"><span class="badge" title="MIT">MIT</span><span>11.7 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/StijnCaerts-Gamebuino-Pong.hex&amp;title=Gamebuino+(StijnCaerts)+—+Pong" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/StijnCaerts/Gamebuino" target="_blank" rel="noopener">Original repo</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/games/StijnCaerts-Gamebuino" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-search="gamebuino (stijncaerts) — snake stijn caerts bundles a real local 2-player pong and a snake; the snake needs a real external ivanseidel/linkedlist arduino library stijncaerts-gamebuino-snake2">
+        <img class="shot" src="screenshots/StijnCaerts-Gamebuino-Snake2.png" alt="Gamebuino (StijnCaerts) — Snake screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/StijnCaerts-Gamebuino-Snake2.hex&amp;title=Gamebuino+(StijnCaerts)+—+Snake" data-play>Gamebuino (StijnCaerts) — Snake</a></h2>
+          <div class="by">by Stijn Caerts</div>
+          <p class="desc">Bundles a real local 2-player Pong and a Snake; the Snake needs a real external ivanseidel/LinkedList Arduino library</p>
+          <div class="meta"><span class="badge" title="MIT">MIT</span><span>12.7 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/StijnCaerts-Gamebuino-Snake2.hex&amp;title=Gamebuino+(StijnCaerts)+—+Snake" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/StijnCaerts/Gamebuino" target="_blank" rel="noopener">Original repo</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/games/StijnCaerts-Gamebuino" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="tools" data-search="gamebuino beer-calc awot83 a beer-brewing calculator gamebuino-beer-calc">
+        <img class="shot" src="screenshots/Gamebuino-BEER-CALC.png" alt="Gamebuino BEER-CALC screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../tools/Gamebuino-BEER-CALC.hex&amp;title=Gamebuino+BEER-CALC" data-play>Gamebuino BEER-CALC</a></h2>
+          <div class="by">by Awot83</div>
+          <p class="desc">A beer-brewing calculator</p>
+          <div class="meta"><span class="badge" title="GPLv3">GPLv3</span><span>14.8 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../tools/Gamebuino-BEER-CALC.hex&amp;title=Gamebuino+BEER-CALC" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/Awot83/Gamebuino-BEER-CALC" target="_blank" rel="noopener">Original repo</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/tools/Gamebuino-BEER-CALC" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-search="gamebuino catcher qubist  gamebuino-catcher">
+        <img class="shot" src="screenshots/Gamebuino-Catcher.png" alt="Gamebuino Catcher screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/Gamebuino-Catcher.hex&amp;title=Gamebuino+Catcher" data-play>Gamebuino Catcher</a></h2>
+          <div class="by">by qubist</div>
+          <div class="meta"><span class="badge" title="None specified">None specified</span><span>17.7 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/Gamebuino-Catcher.hex&amp;title=Gamebuino+Catcher" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/qubist/Gamebuino-Catcher" target="_blank" rel="noopener">Original repo</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/games/Gamebuino-Catcher" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="tools" data-search="gamebuino drawer qubist a real, functional pixel-art drawing tool with a menu system; only save/export are unfinished //fixme stubs, the core drawing loop works gamebuino-drawer">
+        <img class="shot" src="screenshots/Gamebuino-Drawer.png" alt="Gamebuino Drawer screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../tools/Gamebuino-Drawer.hex&amp;title=Gamebuino+Drawer" data-play>Gamebuino Drawer</a></h2>
+          <div class="by">by qubist</div>
+          <p class="desc">A real, functional pixel-art drawing tool with a menu system; only Save/Export are unfinished //FIXME stubs, the core drawing loop works</p>
+          <div class="meta"><span class="badge" title="None specified">None specified</span><span>12.8 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../tools/Gamebuino-Drawer.hex&amp;title=Gamebuino+Drawer" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/qubist/Gamebuino-Drawer" target="_blank" rel="noopener">Original repo</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/tools/Gamebuino-Drawer" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="tools" data-search="gamebuino hiragana japanese learning tool awot83 a japanese hiragana-reading learning tool gamebuino-hiragana-japanese-learning-tool">
+        <img class="shot" src="screenshots/Gamebuino-HIRAGANA-Japanese-Learning-tool.png" alt="Gamebuino HIRAGANA Japanese Learning tool screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../tools/Gamebuino-HIRAGANA-Japanese-Learning-tool.hex&amp;title=Gamebuino+HIRAGANA+Japanese+Learning+tool" data-play>Gamebuino HIRAGANA Japanese Learning tool</a></h2>
+          <div class="by">by Awot83</div>
+          <p class="desc">A Japanese hiragana-reading learning tool</p>
+          <div class="meta"><span class="badge" title="GPLv3">GPLv3</span><span>19.2 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../tools/Gamebuino-HIRAGANA-Japanese-Learning-tool.hex&amp;title=Gamebuino+HIRAGANA+Japanese+Learning+tool" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/Awot83/Gamebuino-HIRAGANA-Japanese-Learning-tool" target="_blank" rel="noopener">Original repo</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/tools/Gamebuino-HIRAGANA-Japanese-Learning-tool" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="tools" data-search="gamebuino musicnote awot83 a music-note learning/ear-training tool gamebuino-musicnote">
+        <img class="shot" src="screenshots/Gamebuino-MusicNote.png" alt="Gamebuino MusicNote screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../tools/Gamebuino-MusicNote.hex&amp;title=Gamebuino+MusicNote" data-play>Gamebuino MusicNote</a></h2>
+          <div class="by">by Awot83</div>
+          <p class="desc">A music-note learning/ear-training tool</p>
+          <div class="meta"><span class="badge" title="GPLv3">GPLv3</span><span>15.1 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../tools/Gamebuino-MusicNote.hex&amp;title=Gamebuino+MusicNote" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/Awot83/Gamebuino-MusicNote" target="_blank" rel="noopener">Original repo</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/tools/Gamebuino-MusicNote" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="tools" data-search="gamebuino thunderbolt calc awot83 a lightning-strike-distance calculator gamebuino-thunderbolt_calc">
+        <img class="shot" src="screenshots/Gamebuino-Thunderbolt_Calc.png" alt="Gamebuino Thunderbolt Calc screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../tools/Gamebuino-Thunderbolt_Calc.hex&amp;title=Gamebuino+Thunderbolt+Calc" data-play>Gamebuino Thunderbolt Calc</a></h2>
+          <div class="by">by Awot83</div>
+          <p class="desc">A lightning-strike-distance calculator</p>
+          <div class="meta"><span class="badge" title="GPLv3">GPLv3</span><span>12.8 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../tools/Gamebuino-Thunderbolt_Calc.hex&amp;title=Gamebuino+Thunderbolt+Calc" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/Awot83/Gamebuino-Thunderbolt_Calc" target="_blank" rel="noopener">Original repo</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/tools/Gamebuino-Thunderbolt_Calc" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-search="gamebuino-classic-snake-5110 lady awesome &amp; makersquirrel  gamebuino-classic-snake-5110">
+        <img class="shot" src="screenshots/Gamebuino-Classic-Snake-5110.png" alt="Gamebuino-Classic-Snake-5110 screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/Gamebuino-Classic-Snake-5110.hex&amp;title=Gamebuino-Classic-Snake-5110" data-play>Gamebuino-Classic-Snake-5110</a></h2>
+          <div class="by">by Lady Awesome &amp; MakerSquirrel</div>
+          <div class="meta"><span class="badge" title="GPLv3 (per the repo&#x27;s own LICENSE) — though the source file&#x27;s own header comment separately claims CC-BY-SA; a real, unresolved conflict between the two, not resolved here">GPLv3…</span><span>18.0 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/Gamebuino-Classic-Snake-5110.hex&amp;title=Gamebuino-Classic-Snake-5110" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/makerSquirrel/Gamebuino-Classic-Snake-5110" target="_blank" rel="noopener">Original repo</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/games/Gamebuino-Classic-Snake-5110" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-search="gamebuino2048 josiah winslow  gamebuino2048">
+        <img class="shot" src="screenshots/Gamebuino2048.png" alt="Gamebuino2048 screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/Gamebuino2048.hex&amp;title=Gamebuino2048" data-play>Gamebuino2048</a></h2>
+          <div class="by">by Josiah Winslow</div>
+          <div class="meta"><span class="badge" title="None specified">None specified</span><span>16.0 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/Gamebuino2048.hex&amp;title=Gamebuino2048" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/games/Gamebuino2048" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-search="gemgem tnxec2 a bejeweled-style match-3 game with real eeprom save/pause gemgem-gamebuino">
+        <img class="shot" src="screenshots/gemgem-gamebuino.png" alt="Gemgem screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/gemgem-gamebuino.hex&amp;title=Gemgem" data-play>Gemgem</a></h2>
+          <div class="by">by Tnxec2</div>
+          <p class="desc">A Bejeweled-style match-3 game with real EEPROM save/pause</p>
+          <div class="meta"><span class="badge" title="None specified">None specified</span><span>15.3 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/gemgem-gamebuino.hex&amp;title=Gemgem" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/Tnxec2/gemgem-gamebuino" target="_blank" rel="noopener">Original repo</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/games/gemgem-gamebuino" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="tools" data-search="ghost clement83 a &quot;ghost detector&quot; novelty gadget using the real ambient-light sensor as a dowsing-needle gauge; a real, complete, non-stub demo, not a game with a win/lose state ghost">
+        <img class="shot" src="screenshots/ghost.png" alt="ghost screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../tools/ghost.hex&amp;title=ghost" data-play>ghost</a></h2>
+          <div class="by">by Clement83</div>
+          <p class="desc">A &quot;ghost detector&quot; novelty gadget using the real ambient-light sensor as a dowsing-needle gauge; a real, complete, non-stub demo, not a game with a win/lose state</p>
+          <div class="meta"><span class="badge" title="None specified">None specified</span><span>11.8 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../tools/ghost.hex&amp;title=ghost" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/Clement83/ghost" target="_blank" rel="noopener">Original repo</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/tools/ghost" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-search="glaciglaca clement83  glaciglaca">
+        <img class="shot" src="screenshots/GlaciGlaca.png" alt="GlaciGlaca screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/GlaciGlaca.hex&amp;title=GlaciGlaca" data-play>GlaciGlaca</a></h2>
+          <div class="by">by Clement83</div>
+          <div class="meta"><span class="badge" title="None specified">None specified</span><span>22.9 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/GlaciGlaca.hex&amp;title=GlaciGlaca" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/Clement83/GlaciGlaca" target="_blank" rel="noopener">Original repo</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/games/GlaciGlaca" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-search="gruniozerca arkadiusz kaminski (arhneu)  gruniozerca-gamebuino">
+        <img class="shot" src="screenshots/gruniozerca-gamebuino.png" alt="Gruniozerca screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/gruniozerca-gamebuino.hex&amp;title=Gruniozerca" data-play>Gruniozerca</a></h2>
+          <div class="by">by Arkadiusz Kaminski (arhneu)</div>
+          <div class="meta"><span class="badge" title="Unlicense">Unlicense</span><span>15.9 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/gruniozerca-gamebuino.hex&amp;title=Gruniozerca" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/arhneu/gruniozerca-gamebuino" target="_blank" rel="noopener">Original repo</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/games/gruniozerca-gamebuino" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="tools" data-search="hellogamebuino sloecomputers (originally anotherjohnh) a cmake/makefile-based dev environment for building real gamebuino classic .hex binaries from the command line, without the arduino ide hellogamebuino">
+        <img class="shot" src="screenshots/HelloGamebuino.png" alt="HelloGamebuino screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../tools/HelloGamebuino.hex&amp;title=HelloGamebuino" data-play>HelloGamebuino</a></h2>
+          <div class="by">by SloeComputers (originally AnotherJohnH)</div>
+          <p class="desc">A CMake/Makefile-based dev environment for building real Gamebuino Classic .HEX binaries from the command line, without the Arduino IDE</p>
+          <div class="meta"><span class="badge" title="Unlicense">Unlicense</span><span>9.6 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../tools/HelloGamebuino.hex&amp;title=HelloGamebuino" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/SloeComputers/HelloGamebuino" target="_blank" rel="noopener">Original repo</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/tools/HelloGamebuino" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-search="invaders yoda zhang  yoda-invaders">
+        <img class="shot" src="screenshots/yoda-invaders.png" alt="Invaders screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/yoda-invaders.hex&amp;title=Invaders" data-play>Invaders</a></h2>
+          <div class="by">by Yoda Zhang</div>
+          <div class="meta"><span class="badge" title="None specified">None specified</span><span>16.8 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/yoda-invaders.hex&amp;title=Invaders" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/games/yoda-invaders" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-search="jezzball rackhamlenoir  gamebuino-jezzball">
+        <img class="shot" src="screenshots/gamebuino-jezzball.png" alt="Jezzball screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/gamebuino-jezzball.hex&amp;title=Jezzball" data-play>Jezzball</a></h2>
+          <div class="by">by RackhamLeNoir</div>
+          <div class="meta"><span class="badge" title="GPLv3">GPLv3</span><span>16.6 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/gamebuino-jezzball.hex&amp;title=Jezzball" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/RackhamLeNoir/gamebuino-jezzball" target="_blank" rel="noopener">Original repo</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/games/gamebuino-jezzball" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-search="kill race yoda zhang  yoda-killrace">
+        <img class="shot" src="screenshots/yoda-killrace.png" alt="Kill Race screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/yoda-killrace.hex&amp;title=Kill+Race" data-play>Kill Race</a></h2>
+          <div class="by">by Yoda Zhang</div>
+          <div class="meta"><span class="badge" title="None specified">None specified</span><span>16.1 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/yoda-killrace.hex&amp;title=Kill+Race" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/games/yoda-killrace" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-search="lander yoda zhang  yoda-lander">
+        <img class="shot" src="screenshots/yoda-lander.png" alt="Lander screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/yoda-lander.hex&amp;title=Lander" data-play>Lander</a></h2>
+          <div class="by">by Yoda Zhang</div>
+          <div class="meta"><span class="badge" title="None specified">None specified</span><span>17.1 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/yoda-lander.hex&amp;title=Lander" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/games/yoda-lander" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-search="lights out ad 94k  lightsoutad">
+        <img class="shot" src="screenshots/LightsOutAD.png" alt="Lights Out AD screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/LightsOutAD.hex&amp;title=Lights+Out+AD" data-play>Lights Out AD</a></h2>
+          <div class="by">by 94k</div>
+          <div class="meta"><span class="badge" title="WTFPL">WTFPL</span><span>14.5 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/LightsOutAD.hex&amp;title=Lights+Out+AD" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/games/LightsOutAD" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-search="maruino ajsb113  maruino">
+        <img class="shot" src="screenshots/Maruino.png" alt="Maruino screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/Maruino.hex&amp;title=Maruino" data-play>Maruino</a></h2>
+          <div class="by">by ajsb113</div>
+          <div class="meta"><span class="badge" title="None specified">None specified</span><span>23.3 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/Maruino.hex&amp;title=Maruino" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/games/Maruino" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-search="master kebab ogbaba a kebab-shop management game with a real eeprom save; the author&#x27;s own readme warns &quot;this game may not work on emulators&quot; masterkebab">
+        <img class="shot" src="screenshots/MasterKebab.png" alt="Master Kebab screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/MasterKebab.hex&amp;title=Master+Kebab" data-play>Master Kebab</a></h2>
+          <div class="by">by ogbaba</div>
+          <p class="desc">A kebab-shop management game with a real EEPROM save; the author&#x27;s own README warns &quot;this game may not work on emulators&quot;</p>
+          <div class="meta"><span class="badge" title="GPLv3">GPLv3</span><span>13.3 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/MasterKebab.hex&amp;title=Master+Kebab" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/ogbaba/RMKebab" target="_blank" rel="noopener">Original repo</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/games/MasterKebab" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-search="maze andy o&#x27;neill  gamebuino-maze">
+        <img class="shot" src="screenshots/gamebuino-maze.png" alt="Maze screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/gamebuino-maze.hex&amp;title=Maze" data-play>Maze</a></h2>
+          <div class="by">by Andy O&#x27;Neill</div>
+          <div class="meta"><span class="badge" title="MIT">MIT</span><span>13.1 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/gamebuino-maze.hex&amp;title=Maze" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/aoneill01/gamebuino-maze" target="_blank" rel="noopener">Original repo</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/games/gamebuino-maze" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="tools" data-search="metalog ogbaba a logic-circuit simulator metalog">
+        <img class="shot" src="screenshots/Metalog.png" alt="Metalog screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../tools/Metalog.hex&amp;title=Metalog" data-play>Metalog</a></h2>
+          <div class="by">by ogbaba</div>
+          <p class="desc">A logic-circuit simulator</p>
+          <div class="meta"><span class="badge" title="GPLv3">GPLv3</span><span>12.8 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../tools/Metalog.hex&amp;title=Metalog" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/ogbaba/Metalog" target="_blank" rel="noopener">Original repo</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/tools/Metalog" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-search="microhexagon valdenthoranar  microhexagon">
+        <img class="shot" src="screenshots/microhexagon.png" alt="microHexagon screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/microhexagon.hex&amp;title=microHexagon" data-play>microHexagon</a></h2>
+          <div class="by">by valdenthoranar</div>
+          <div class="meta"><span class="badge" title="None specified">None specified</span><span>21.3 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/microhexagon.hex&amp;title=microHexagon" data-play>&#9654; Play</a><a class="src-link" href="https://bitbucket.org/valdenthoranar/microhexagon" target="_blank" rel="noopener">Original repo</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/games/microhexagon" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-search="minesweeper dirksteindorf  gamebuino-minesweeper">
+        <img class="shot" src="screenshots/Gamebuino-Minesweeper.png" alt="Minesweeper screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/Gamebuino-Minesweeper.hex&amp;title=Minesweeper" data-play>Minesweeper</a></h2>
+          <div class="by">by dirksteindorf</div>
+          <div class="meta"><span class="badge" title="None specified">None specified</span><span>13.4 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/Gamebuino-Minesweeper.hex&amp;title=Minesweeper" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/dirksteindorf/Gamebuino-Minesweeper" target="_blank" rel="noopener">Original repo</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/games/Gamebuino-Minesweeper" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-search="minesweeper (tnxec2&#x27;s fork) tnxec2 a genuinely different codebase state, not a duplicate minesw-gameguino">
+        <img class="shot" src="screenshots/minesw-gameguino.png" alt="Minesweeper (Tnxec2&#x27;s fork) screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/minesw-gameguino.hex&amp;title=Minesweeper+(Tnxec2&#x27;s+fork)" data-play>Minesweeper (Tnxec2&#x27;s fork)</a></h2>
+          <div class="by">by Tnxec2</div>
+          <p class="desc">A genuinely different codebase state, not a duplicate</p>
+          <div class="meta"><span class="badge" title="None specified">None specified</span><span>13.2 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/minesw-gameguino.hex&amp;title=Minesweeper+(Tnxec2&#x27;s+fork)" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/Tnxec2/minesw-gameguino" target="_blank" rel="noopener">Original repo</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/games/minesw-gameguino" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-search="mole control markus klingler (grafmakulader2te) a real, complete whack-a-mole game with scoring, levels, and lives mole-control">
+        <img class="shot" src="screenshots/mole-control.png" alt="Mole Control screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/mole-control.hex&amp;title=Mole+Control" data-play>Mole Control</a></h2>
+          <div class="by">by Markus Klingler (grafMakulaDer2te)</div>
+          <p class="desc">A real, complete Whack-a-Mole game with scoring, levels, and lives</p>
+          <div class="meta"><span class="badge" title="None specified">None specified</span><span>13.2 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/mole-control.hex&amp;title=Mole+Control" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/grafMakulaDer2te/mole-control" target="_blank" rel="noopener">Original repo</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/games/mole-control" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-search="motocross clement83 a racing game motocross">
+        <img class="shot" src="screenshots/MotoCross.png" alt="MotoCross screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/MotoCross.hex&amp;title=MotoCross" data-play>MotoCross</a></h2>
+          <div class="by">by Clement83</div>
+          <p class="desc">A racing game</p>
+          <div class="meta"><span class="badge" title="None specified">None specified</span><span>13.9 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/MotoCross.hex&amp;title=MotoCross" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/Clement83/motoCross" target="_blank" rel="noopener">Original repo</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/games/MotoCross" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-search="my rpg frakasss a small rpg myrpg">
+        <img class="shot" src="screenshots/MyRPG.png" alt="My RPG screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/MyRPG.hex&amp;title=My+RPG" data-play>My RPG</a></h2>
+          <div class="by">by Frakasss</div>
+          <p class="desc">A small RPG</p>
+          <div class="meta"><span class="badge" title="None specified">None specified</span><span>13.6 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/MyRPG.hex&amp;title=My+RPG" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/Frakasss/MyRPG" target="_blank" rel="noopener">Original repo</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/games/MyRPG" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-search="no name platform game frakasss a real platformer despite the placeholder-looking name nonameplatformgame">
+        <img class="shot" src="screenshots/NoNamePlatformGame.png" alt="No Name Platform Game screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/NoNamePlatformGame.hex&amp;title=No+Name+Platform+Game" data-play>No Name Platform Game</a></h2>
+          <div class="by">by Frakasss</div>
+          <p class="desc">A real platformer despite the placeholder-looking name</p>
+          <div class="meta"><span class="badge" title="None specified">None specified</span><span>11.7 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/NoNamePlatformGame.hex&amp;title=No+Name+Platform+Game" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/Frakasss/NoNamePlatformGame" target="_blank" rel="noopener">Original repo</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/games/NoNamePlatformGame" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-search="pak-man (makerbuino port) andy jackson  pak-man_makerbuino">
+        <img class="shot" src="screenshots/PAK-MAN_MAKERbuino.png" alt="PAK-MAN (MAKERbuino port) screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/PAK-MAN_MAKERbuino.hex&amp;title=PAK-MAN+(MAKERbuino+port)" data-play>PAK-MAN (MAKERbuino port)</a></h2>
+          <div class="by">by Andy Jackson</div>
+          <div class="meta"><span class="badge" title="None specified">None specified</span><span>17.2 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/PAK-MAN_MAKERbuino.hex&amp;title=PAK-MAN+(MAKERbuino+port)" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/games/PAK-MAN_MAKERbuino" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-search="paqman yoda zhang  yoda-paqman">
+        <img class="shot" src="screenshots/yoda-paqman.png" alt="Paqman screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/yoda-paqman.hex&amp;title=Paqman" data-play>Paqman</a></h2>
+          <div class="by">by Yoda Zhang</div>
+          <div class="meta"><span class="badge" title="None specified">None specified</span><span>20.1 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/yoda-paqman.hex&amp;title=Paqman" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/games/yoda-paqman" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-search="parachute jicehel a game &amp; watch &quot;parachute&quot; remake parachute_gamebuino">
+        <img class="shot" src="screenshots/Parachute_Gamebuino.png" alt="Parachute screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/Parachute_Gamebuino.hex&amp;title=Parachute" data-play>Parachute</a></h2>
+          <div class="by">by Jicehel</div>
+          <p class="desc">A Game &amp; Watch &quot;Parachute&quot; remake</p>
+          <div class="meta"><span class="badge" title="None specified">None specified</span><span>13.5 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/Parachute_Gamebuino.hex&amp;title=Parachute" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/jicehel/Parachute_Gamebuino" target="_blank" rel="noopener">Original repo</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/games/Parachute_Gamebuino" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-search="petit monstre clement83 &quot;futuromon&quot;, a real pokémon-style monster-catching/battling game petitmonstre">
+        <img class="shot" src="screenshots/PetitMonstre.png" alt="Petit Monstre screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/PetitMonstre.hex&amp;title=Petit+Monstre" data-play>Petit Monstre</a></h2>
+          <div class="by">by Clement83</div>
+          <p class="desc">&quot;Futuromon&quot;, a real Pokémon-style monster-catching/battling game</p>
+          <div class="meta"><span class="badge" title="None specified">None specified</span><span>25.5 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/PetitMonstre.hex&amp;title=Petit+Monstre" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/Clement83/petitMonstre" target="_blank" rel="noopener">Original repo</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/games/PetitMonstre" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-search="pinball clement83  pinball">
+        <img class="shot" src="screenshots/PinBall.png" alt="Pinball screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/PinBall.hex&amp;title=Pinball" data-play>Pinball</a></h2>
+          <div class="by">by Clement83</div>
+          <div class="meta"><span class="badge" title="None specified">None specified</span><span>19.2 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/PinBall.hex&amp;title=Pinball" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/Clement83/pinBall" target="_blank" rel="noopener">Original repo</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/games/PinBall" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-search="pirates clement83 (art by jerom) &quot;swordspi&quot;, sword-fighting vs. a real ai opponent pirates">
+        <img class="shot" src="screenshots/Pirates.png" alt="Pirates screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/Pirates.hex&amp;title=Pirates" data-play>Pirates</a></h2>
+          <div class="by">by Clement83 (art by Jerom)</div>
+          <p class="desc">&quot;SwordsPi&quot;, sword-fighting vs. a real AI opponent</p>
+          <div class="meta"><span class="badge" title="None specified">None specified</span><span>27.3 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/Pirates.hex&amp;title=Pirates" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/Clement83/Pirates" target="_blank" rel="noopener">Original repo</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/games/Pirates" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-search="pong local multiplayer qubist a genuine local hot-seat 2-player pong gamebuino-ponglocalmultiplayer">
+        <img class="shot" src="screenshots/Gamebuino-PongLocalMultiplayer.png" alt="Pong Local Multiplayer screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/Gamebuino-PongLocalMultiplayer.hex&amp;title=Pong+Local+Multiplayer" data-play>Pong Local Multiplayer</a></h2>
+          <div class="by">by qubist</div>
+          <p class="desc">A genuine local hot-seat 2-player Pong</p>
+          <div class="meta"><span class="badge" title="None specified">None specified</span><span>11.6 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/Gamebuino-PongLocalMultiplayer.hex&amp;title=Pong+Local+Multiplayer" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/qubist/Gamebuino-PongLocalMultiplayer" target="_blank" rel="noopener">Original repo</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/games/Gamebuino-PongLocalMultiplayer" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-search="pong revisited yawn-g real single-player pong vs. a ball-tracking ai, plus a power-up/&quot;tricks&quot; system pong-2017">
+        <img class="shot" src="screenshots/pong-2017.png" alt="Pong Revisited screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/pong-2017.hex&amp;title=Pong+Revisited" data-play>Pong Revisited</a></h2>
+          <div class="by">by yawn-g</div>
+          <p class="desc">Real single-player Pong vs. a ball-tracking AI, plus a power-up/&quot;tricks&quot; system</p>
+          <div class="meta"><span class="badge" title="None specified">None specified</span><span>14.4 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/pong-2017.hex&amp;title=Pong+Revisited" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/yawn-g/pong-2017" target="_blank" rel="noopener">Original repo</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/games/pong-2017" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-search="pong solo aurelien rodot bundled in the official library gamebuino-classic">
+        <img class="shot" src="screenshots/Gamebuino-Classic.png" alt="Pong Solo screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/Gamebuino-Classic.hex&amp;title=Pong+Solo" data-play>Pong Solo</a></h2>
+          <div class="by">by Aurelien Rodot</div>
+          <p class="desc">Bundled in the official library</p>
+          <div class="meta"><span class="badge" title="LGPLv3">LGPLv3</span><span>11.5 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/Gamebuino-Classic.hex&amp;title=Pong+Solo" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/Gamebuino/Gamebuino-Classic" target="_blank" rel="noopener">Original repo</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/games/Gamebuino-Classic" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-search="punkt andy o&#x27;neill  gamebuino-punkt">
+        <img class="shot" src="screenshots/gamebuino-punkt.png" alt="Punkt screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/gamebuino-punkt.hex&amp;title=Punkt" data-play>Punkt</a></h2>
+          <div class="by">by Andy O&#x27;Neill</div>
+          <div class="meta"><span class="badge" title="MIT">MIT</span><span>13.9 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/gamebuino-punkt.hex&amp;title=Punkt" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/aoneill01/gamebuino-punkt" target="_blank" rel="noopener">Original repo</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/games/gamebuino-punkt" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="tools" data-search="pyditn&#x27;s dice thrower pyditn2 a real dice-rolling utility pyditns-dice-thrower-gamebuino">
+        <img class="shot" src="screenshots/Pyditns-Dice-Thrower-Gamebuino.png" alt="Pyditn&#x27;s Dice Thrower screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../tools/Pyditns-Dice-Thrower-Gamebuino.hex&amp;title=Pyditn&#x27;s+Dice+Thrower" data-play>Pyditn&#x27;s Dice Thrower</a></h2>
+          <div class="by">by pyditn2</div>
+          <p class="desc">A real dice-rolling utility</p>
+          <div class="meta"><span class="badge" title="None specified">None specified</span><span>16.3 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../tools/Pyditns-Dice-Thrower-Gamebuino.hex&amp;title=Pyditn&#x27;s+Dice+Thrower" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/pyditn2/Pyditns-Dice-Thrower-Gamebuino" target="_blank" rel="noopener">Original repo</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/tools/Pyditns-Dice-Thrower-Gamebuino" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="tools" data-search="radio scmar a real fm radio receiver app using an rda5807 chip, with rds support radio">
+        <img class="shot" src="screenshots/Radio.png" alt="Radio screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../tools/Radio.hex&amp;title=Radio" data-play>Radio</a></h2>
+          <div class="by">by scmar</div>
+          <p class="desc">A real FM radio receiver app using an RDA5807 chip, with RDS support</p>
+          <div class="meta"><span class="badge" title="MIT">MIT</span><span>23.8 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../tools/Radio.hex&amp;title=Radio" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/scmar/Radio" target="_blank" rel="noopener">Original repo</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/tools/Radio" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-search="ralph clement83 a wreck-it-ralph-themed platformer ralph">
+        <img class="shot" src="screenshots/Ralph.png" alt="Ralph screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/Ralph.hex&amp;title=Ralph" data-play>Ralph</a></h2>
+          <div class="by">by Clement83</div>
+          <p class="desc">A Wreck-It-Ralph-themed platformer</p>
+          <div class="meta"><span class="badge" title="None specified">None specified</span><span>13.1 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/Ralph.hex&amp;title=Ralph" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/Clement83/ralph" target="_blank" rel="noopener">Original repo</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/games/Ralph" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-search="robot frakasss a real shooting/action game robot">
+        <img class="shot" src="screenshots/Robot.png" alt="Robot screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/Robot.hex&amp;title=Robot" data-play>Robot</a></h2>
+          <div class="by">by Frakasss</div>
+          <p class="desc">A real shooting/action game</p>
+          <div class="meta"><span class="badge" title="None specified">None specified</span><span>25.6 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/Robot.hex&amp;title=Robot" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/Frakasss/Robot" target="_blank" rel="noopener">Original repo</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/games/Robot" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-search="save princesse clement83 a tiny knight-vs-monster teaching game saveprincesse">
+        <img class="shot" src="screenshots/SavePrincesse.png" alt="Save Princesse screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/SavePrincesse.hex&amp;title=Save+Princesse" data-play>Save Princesse</a></h2>
+          <div class="by">by Clement83</div>
+          <p class="desc">A tiny knight-vs-monster teaching game</p>
+          <div class="meta"><span class="badge" title="None specified">None specified</span><span>11.6 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/SavePrincesse.hex&amp;title=Save+Princesse" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/Clement83/SavePrincesse" target="_blank" rel="noopener">Original repo</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/games/SavePrincesse" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="tools" data-search="sd_map_test wuuff an interactive sd-card-streamed scrolling-map tech demo, not a game in its own right sd_map_test">
+        <img class="shot" src="screenshots/sd_map_test.png" alt="sd_map_test screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../tools/sd_map_test.hex&amp;title=sd_map_test&amp;sd=sdcard.img" data-play>sd_map_test</a></h2>
+          <div class="by">by wuuff</div>
+          <p class="desc">An interactive SD-card-streamed scrolling-map tech demo, not a game in its own right</p>
+          <div class="meta"><span class="badge" title="None specified">None specified</span><span>21.0 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../tools/sd_map_test.hex&amp;title=sd_map_test&amp;sd=sdcard.img" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/wuuff/sd_map_test" target="_blank" rel="noopener">Original repo</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/tools/sd_map_test" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-search="senet maximilian timmerkamp (delphimarkus)  senet">
+        <img class="shot" src="screenshots/senet.png" alt="Senet screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/senet.hex&amp;title=Senet" data-play>Senet</a></h2>
+          <div class="by">by Maximilian Timmerkamp (DelphiMarkus)</div>
+          <div class="meta"><span class="badge" title="Apache 2.0">Apache 2.0</span><span>22.9 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/senet.hex&amp;title=Senet" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/games/senet" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-search="shipwrek yawn-g  shipwrek">
+        <img class="shot" src="screenshots/shipwrek.png" alt="shipwrek screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/shipwrek.hex&amp;title=shipwrek" data-play>shipwrek</a></h2>
+          <div class="by">by yawn-g</div>
+          <div class="meta"><span class="badge" title="None specified">None specified</span><span>17.3 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/shipwrek.hex&amp;title=shipwrek" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/yawn-g/shipwrek" target="_blank" rel="noopener">Original repo</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/games/shipwrek" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-search="shootbuino frthery  shootbuino">
+        <img class="shot" src="screenshots/ShootBuino.png" alt="ShootBuino screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/ShootBuino.hex&amp;title=ShootBuino" data-play>ShootBuino</a></h2>
+          <div class="by">by frthery</div>
+          <div class="meta"><span class="badge" title="None specified">None specified</span><span>21.5 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/ShootBuino.hex&amp;title=ShootBuino" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/frthery/ShootBuino" target="_blank" rel="noopener">Original repo</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/games/ShootBuino" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-search="shufflepuck cafe awot83  gamebuino-shufflepuck_cafe">
+        <img class="shot" src="screenshots/Gamebuino-Shufflepuck_cafe.png" alt="Shufflepuck Cafe screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/Gamebuino-Shufflepuck_cafe.hex&amp;title=Shufflepuck+Cafe" data-play>Shufflepuck Cafe</a></h2>
+          <div class="by">by AWOT83</div>
+          <div class="meta"><span class="badge" title="GPLv3">GPLv3</span><span>20.2 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/Gamebuino-Shufflepuck_cafe.hex&amp;title=Shufflepuck+Cafe" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/Awot83/Gamebuino-Shufflepuck_cafe" target="_blank" rel="noopener">Original repo</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/games/Gamebuino-Shufflepuck_cafe" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-search="simonbuino jerom (forklift5)  simonbuino">
+        <img class="shot" src="screenshots/Simonbuino.png" alt="Simonbuino screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/Simonbuino.hex&amp;title=Simonbuino" data-play>Simonbuino</a></h2>
+          <div class="by">by Jerom (Forklift5)</div>
+          <div class="meta"><span class="badge" title="None specified">None specified</span><span>12.9 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/Simonbuino.hex&amp;title=Simonbuino" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/Forklift5/Simonbuino" target="_blank" rel="noopener">Original repo</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/games/Simonbuino" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-search="skibuino mike del pozzo also officially targets the related makerbuino board skibuino">
+        <img class="shot" src="screenshots/skibuino.png" alt="Skibuino screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/skibuino.hex&amp;title=Skibuino" data-play>Skibuino</a></h2>
+          <div class="by">by Mike Del Pozzo</div>
+          <p class="desc">Also officially targets the related MAKERbuino board</p>
+          <div class="meta"><span class="badge" title="GPLv3">GPLv3</span><span>14.9 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/skibuino.hex&amp;title=Skibuino" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/delpozzo/skibuino" target="_blank" rel="noopener">Original repo</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/games/skibuino" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-search="smash-and-crash skyrunner65  smash-and-crash">
+        <img class="shot" src="screenshots/Smash-and-Crash.png" alt="Smash-and-Crash screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/Smash-and-Crash.hex&amp;title=Smash-and-Crash" data-play>Smash-and-Crash</a></h2>
+          <div class="by">by Skyrunner65</div>
+          <div class="meta"><span class="badge" title="None specified">None specified</span><span>18.4 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/Smash-and-Crash.hex&amp;title=Smash-and-Crash" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/Skyrunner65/Smash-and-Crash" target="_blank" rel="noopener">Original repo</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/games/Smash-and-Crash" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-search="snake abc frthery  snakeabcbuino">
+        <img class="shot" src="screenshots/SnakeAbcBuino.png" alt="Snake ABC screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/SnakeAbcBuino.hex&amp;title=Snake+ABC" data-play>Snake ABC</a></h2>
+          <div class="by">by frthery</div>
+          <div class="meta"><span class="badge" title="None specified">None specified</span><span>15.3 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/SnakeAbcBuino.hex&amp;title=Snake+ABC" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/frthery/SnakeAbcBuino" target="_blank" rel="noopener">Original repo</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/games/SnakeAbcBuino" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-search="snake classic ripper121 (original), tnxec2 (fork) confirmed via source diff to be a direct fork of ripper121&#x27;s own, otherwise-unrecoverable, wiki-listed snake snake-gamebuino-classic">
+        <img class="shot" src="screenshots/snake-gamebuino-classic.png" alt="Snake Classic screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/snake-gamebuino-classic.hex&amp;title=Snake+Classic" data-play>Snake Classic</a></h2>
+          <div class="by">by Ripper121 (original), Tnxec2 (fork)</div>
+          <p class="desc">Confirmed via source diff to be a direct fork of Ripper121&#x27;s own, otherwise-unrecoverable, wiki-listed Snake</p>
+          <div class="meta"><span class="badge" title="None specified">None specified</span><span>12.5 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/snake-gamebuino-classic.hex&amp;title=Snake+Classic" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/Tnxec2/snake-gamebuino-classic" target="_blank" rel="noopener">Original repo</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/games/snake-gamebuino-classic" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-search="sokobuino martinsustek  sokobuino">
+        <img class="shot" src="screenshots/sokobuino.png" alt="Sokobuino screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/sokobuino.hex&amp;title=Sokobuino" data-play>Sokobuino</a></h2>
+          <div class="by">by martinsustek</div>
+          <div class="meta"><span class="badge" title="None specified">None specified</span><span>26.9 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/sokobuino.hex&amp;title=Sokobuino" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/games/sokobuino" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-search="solitaire andy o&#x27;neill  gamebuino-solitaire">
+        <img class="shot" src="screenshots/gamebuino-solitaire.png" alt="Solitaire screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/gamebuino-solitaire.hex&amp;title=Solitaire" data-play>Solitaire</a></h2>
+          <div class="by">by Andy O&#x27;Neill</div>
+          <div class="meta"><span class="badge" title="MIT">MIT</span><span>20.2 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/gamebuino-solitaire.hex&amp;title=Solitaire" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/aoneill01/gamebuino-solitaire" target="_blank" rel="noopener">Original repo</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/games/gamebuino-solitaire" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-search="spin spin spinbuino! zoglu  spinspinspinbuino">
+        <img class="shot" src="screenshots/SpinSpinSpinbuino.png" alt="Spin Spin Spinbuino! screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/SpinSpinSpinbuino.hex&amp;title=Spin+Spin+Spinbuino!" data-play>Spin Spin Spinbuino!</a></h2>
+          <div class="by">by Zoglu</div>
+          <div class="meta"><span class="badge" title="None specified">None specified</span><span>21.8 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/SpinSpinSpinbuino.hex&amp;title=Spin+Spin+Spinbuino!" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/games/SpinSpinSpinbuino" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-search="star honor wuuff (a port of wenceslao villanueva jr&#x27;s original arduboy game) a roguelike space adventure with a real eeprom save starhonor">
+        <img class="shot" src="screenshots/StarHonor.png" alt="Star Honor screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/StarHonor.hex&amp;title=Star+Honor" data-play>Star Honor</a></h2>
+          <div class="by">by wuuff (a port of Wenceslao Villanueva Jr&#x27;s original Arduboy game)</div>
+          <p class="desc">A roguelike space adventure with a real EEPROM save</p>
+          <div class="meta"><span class="badge" title="MIT">MIT</span><span>27.3 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/StarHonor.hex&amp;title=Star+Honor" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/wuuff/StarHonor-gamebuino" target="_blank" rel="noopener">Original repo</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/games/StarHonor" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-search="stickfighter clement83 (art by quirby64)  stickfighter">
+        <img class="shot" src="screenshots/StickFighter.png" alt="StickFighter screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/StickFighter.hex&amp;title=StickFighter" data-play>StickFighter</a></h2>
+          <div class="by">by Clement83 (art by Quirby64)</div>
+          <div class="meta"><span class="badge" title="None specified">None specified</span><span>25.8 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/StickFighter.hex&amp;title=StickFighter" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/Clement83/StickFighter" target="_blank" rel="noopener">Original repo</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/games/StickFighter" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-search="strike-down skyrunner65 (renamed to skylarhylar) &quot;aerial-assault&quot;, a real joust clone; same author already credited for smash-and-crash, whose github account was later renamed - confirmed via redirect, not a different person strike-down">
+        <img class="shot" src="screenshots/Strike-Down.png" alt="Strike-Down screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/Strike-Down.hex&amp;title=Strike-Down" data-play>Strike-Down</a></h2>
+          <div class="by">by Skyrunner65 (renamed to SkylarHylar)</div>
+          <p class="desc">&quot;Aerial-Assault&quot;, a real Joust clone; same author already credited for Smash-and-Crash, whose GitHub account was later renamed - confirmed via redirect, not a different person</p>
+          <div class="meta"><span class="badge" title="None specified">None specified</span><span>20.9 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/Strike-Down.hex&amp;title=Strike-Down" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/SkylarHylar/Strike-Down" target="_blank" rel="noopener">Original repo</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/games/Strike-Down" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-search="super crate buino aurelien rodot  super-crate-buino">
+        <img class="shot" src="screenshots/Super-Crate-Buino.png" alt="Super Crate Buino screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/Super-Crate-Buino.hex&amp;title=Super+Crate+Buino" data-play>Super Crate Buino</a></h2>
+          <div class="by">by Aurelien Rodot</div>
+          <div class="meta"><span class="badge" title="None specified">None specified</span><span>25.9 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/Super-Crate-Buino.hex&amp;title=Super+Crate+Buino" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/Rodot/Super-Crate-Buino" target="_blank" rel="noopener">Original repo</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/games/Super-Crate-Buino" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-search="super space shooter msevilgenius  gamebuino-superspaceshooter">
+        <img class="shot" src="screenshots/Gamebuino-SuperSpaceShooter.png" alt="Super Space Shooter screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/Gamebuino-SuperSpaceShooter.hex&amp;title=Super+Space+Shooter" data-play>Super Space Shooter</a></h2>
+          <div class="by">by msevilgenius</div>
+          <div class="meta"><span class="badge" title="None specified">None specified</span><span class="badge" title="Shipped by its author as a prebuilt .hex; not rebuilt here">prebuilt&nbsp;hex</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/Gamebuino-SuperSpaceShooter.hex&amp;title=Super+Space+Shooter" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/msevilgenius/Gamebuino-SuperSpaceShooter" target="_blank" rel="noopener">Original repo</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/games/Gamebuino-SuperSpaceShooter" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-search="t-rex quest awot83  gamebuino-trex-quest">
+        <img class="shot" src="screenshots/Gamebuino-TREX-QUEST.png" alt="T-Rex Quest screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/Gamebuino-TREX-QUEST.hex&amp;title=T-Rex+Quest" data-play>T-Rex Quest</a></h2>
+          <div class="by">by Awot83</div>
+          <div class="meta"><span class="badge" title="GPLv3">GPLv3</span><span>16.5 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/Gamebuino-TREX-QUEST.hex&amp;title=T-Rex+Quest" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/Awot83/Gamebuino-TREX-QUEST" target="_blank" rel="noopener">Original repo</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/games/Gamebuino-TREX-QUEST" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-search="taquin rackhamlenoir  gamebuino-taquin">
+        <img class="shot" src="screenshots/gamebuino-taquin.png" alt="Taquin screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/gamebuino-taquin.hex&amp;title=Taquin" data-play>Taquin</a></h2>
+          <div class="by">by RackhamLeNoir</div>
+          <div class="meta"><span class="badge" title="GPLv3">GPLv3</span><span>12.5 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/gamebuino-taquin.hex&amp;title=Taquin" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/RackhamLeNoir/gamebuino-taquin" target="_blank" rel="noopener">Original repo</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/games/gamebuino-taquin" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-search="tetrino j0ff  tetrino">
+        <img class="shot" src="screenshots/tetrino.png" alt="Tetrino screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/tetrino.hex&amp;title=Tetrino" data-play>Tetrino</a></h2>
+          <div class="by">by j0ff</div>
+          <div class="meta"><span class="badge" title="MIT">MIT</span><span>15.7 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/tetrino.hex&amp;title=Tetrino" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/j0ff/tetrino" target="_blank" rel="noopener">Original repo</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/games/tetrino" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-search="tetrino (tnxec2&#x27;s fork) j0ff (original), tnxec2 (fork) a real, confirmed fork of the already-archived j0ff/tetrino: same .ino source but a genuinely different gb_platform.cpp swapping the b/c button mapping, plus its own .inf sd-card icon the original never shipped; found by checking this author&#x27;s own full repo list, per the same discipline as the fifteen entry above tnxec2-tetrino">
+        <img class="shot" src="screenshots/Tnxec2-tetrino.png" alt="Tetrino (Tnxec2&#x27;s fork) screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/Tnxec2-tetrino.hex&amp;title=Tetrino+(Tnxec2&#x27;s+fork)" data-play>Tetrino (Tnxec2&#x27;s fork)</a></h2>
+          <div class="by">by j0ff (original), Tnxec2 (fork)</div>
+          <p class="desc">A real, confirmed fork of the already-archived j0ff/tetrino: same .ino source but a genuinely different gb_platform.cpp swapping the B/C button mapping, plus its own .INF SD-card icon the original never shipped; found by checking this author&#x27;s own full repo list, per the same discipline as the Fifteen entry above</p>
+          <div class="meta"><span class="badge" title="None specified">None specified</span><span>15.7 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/Tnxec2-tetrino.hex&amp;title=Tetrino+(Tnxec2&#x27;s+fork)" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/Tnxec2/tetrino" target="_blank" rel="noopener">Original repo</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/games/Tnxec2-tetrino" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-search="thunder shoot awot83  gamebuino-thunder-shoot">
+        <img class="shot" src="screenshots/Gamebuino-Thunder-Shoot.png" alt="Thunder Shoot screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/Gamebuino-Thunder-Shoot.hex&amp;title=Thunder+Shoot" data-play>Thunder Shoot</a></h2>
+          <div class="by">by Awot83</div>
+          <div class="meta"><span class="badge" title="GPLv3">GPLv3</span><span>26.3 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/Gamebuino-Thunder-Shoot.hex&amp;title=Thunder+Shoot" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/Awot83/Gamebuino-Thunder-Shoot" target="_blank" rel="noopener">Original repo</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/games/Gamebuino-Thunder-Shoot" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-search="tron clement83  tron">
+        <img class="shot" src="screenshots/Tron.png" alt="Tron screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/Tron.hex&amp;title=Tron" data-play>Tron</a></h2>
+          <div class="by">by Clement83</div>
+          <div class="meta"><span class="badge" title="None specified">None specified</span><span>16.4 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/Tron.hex&amp;title=Tron" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/Clement83/Tron" target="_blank" rel="noopener">Original repo</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/games/Tron" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-search="ufo race rodot  ufo-race">
+        <img class="shot" src="screenshots/UFO-Race.png" alt="UFO Race screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/UFO-Race.hex&amp;title=UFO+Race" data-play>UFO Race</a></h2>
+          <div class="by">by Rodot</div>
+          <div class="meta"><span class="badge" title="None specified">None specified</span><span>19.3 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/UFO-Race.hex&amp;title=UFO+Race" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/Rodot/UFO-Race" target="_blank" rel="noopener">Original repo</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/games/UFO-Race" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-search="under the tower wuuff a real turn-based rpg across 10 randomized dungeons underthetower">
+        <img class="shot" src="screenshots/UnderTheTower.png" alt="Under the Tower screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/UnderTheTower.hex&amp;title=Under+the+Tower" data-play>Under the Tower</a></h2>
+          <div class="by">by wuuff</div>
+          <p class="desc">A real turn-based RPG across 10 randomized dungeons</p>
+          <div class="meta"><span class="badge" title="GPLv3">GPLv3</span><span>28.1 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/UnderTheTower.hex&amp;title=Under+the+Tower" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/wuuff/under-the-tower" target="_blank" rel="noopener">Original repo</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/games/UnderTheTower" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-search="video poker mike del pozzo also officially targets the related makerbuino board videopoker-gamebuino">
+        <img class="shot" src="screenshots/videopoker-gamebuino.png" alt="Video Poker screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/videopoker-gamebuino.hex&amp;title=Video+Poker" data-play>Video Poker</a></h2>
+          <div class="by">by Mike Del Pozzo</div>
+          <p class="desc">Also officially targets the related MAKERbuino board</p>
+          <div class="meta"><span class="badge" title="GPLv3">GPLv3</span><span>17.7 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/videopoker-gamebuino.hex&amp;title=Video+Poker" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/delpozzo/videopoker-gamebuino" target="_blank" rel="noopener">Original repo</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/games/videopoker-gamebuino" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-search="world&#x27;s hardest game sorunome  worlds-hardest-game-gamebuino">
+        <img class="shot" src="screenshots/Worlds-Hardest-Game-Gamebuino.png" alt="World&#x27;s Hardest Game screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/Worlds-Hardest-Game-Gamebuino.hex&amp;title=World&#x27;s+Hardest+Game" data-play>World&#x27;s Hardest Game</a></h2>
+          <div class="by">by Sorunome</div>
+          <div class="meta"><span class="badge" title="None specified">None specified</span><span>20.4 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/Worlds-Hardest-Game-Gamebuino.hex&amp;title=World&#x27;s+Hardest+Game" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/Sorunome/Worlds-Hardest-Game-Gamebuino" target="_blank" rel="noopener">Original repo</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/games/Worlds-Hardest-Game-Gamebuino" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-search="xonix tnxec2 a real xonix clone xonix-gamebuino">
+        <img class="shot" src="screenshots/xonix-gamebuino.png" alt="Xonix screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/xonix-gamebuino.hex&amp;title=Xonix" data-play>Xonix</a></h2>
+          <div class="by">by Tnxec2</div>
+          <p class="desc">A real Xonix clone</p>
+          <div class="meta"><span class="badge" title="None specified">None specified</span><span>14.3 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/xonix-gamebuino.hex&amp;title=Xonix" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/Tnxec2/xonix-gamebuino" target="_blank" rel="noopener">Original repo</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/games/xonix-gamebuino" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="tools" data-search="yoda-fxsynth yoda zhang  yoda-fxsynth">
+        <img class="shot" src="screenshots/yoda-fxsynth.png" alt="yoda-fxsynth screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../tools/yoda-fxsynth.hex&amp;title=yoda-fxsynth" data-play>yoda-fxsynth</a></h2>
+          <div class="by">by Yoda Zhang</div>
+          <div class="meta"><span class="badge" title="None specified">None specified</span><span>11.4 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../tools/yoda-fxsynth.hex&amp;title=yoda-fxsynth" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/tools/yoda-fxsynth" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-search="zombiescape frakasss  zombiescape">
+        <img class="shot" src="screenshots/ZombiEscape.png" alt="ZombiEscape screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/ZombiEscape.hex&amp;title=ZombiEscape" data-play>ZombiEscape</a></h2>
+          <div class="by">by Frakasss</div>
+          <div class="meta"><span class="badge" title="None specified">None specified</span><span>20.9 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/ZombiEscape.hex&amp;title=ZombiEscape" data-play>&#9654; Play</a><a class="src-link" href="https://github.com/Frakasss/ZombiEscape" target="_blank" rel="noopener">Original repo</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/games/ZombiEscape" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+  </div>
+  <p id="empty" hidden>Nothing matches that search.</p>
+</main>
+
+<footer>
+  <hr>
+
+  <h3>Controls</h3>
+  <p>Every game runs in the same emulator, with the same keys:</p>
+  <div class="controls-table">
+    <span><span class="key">Arrows</span> or <span class="key">ESDF</span></span><span>D-pad</span>
+    <span><span class="key">X</span> or <span class="key">K</span></span><span>A button</span>
+    <span><span class="key">Z</span> or <span class="key">L</span></span><span>B button</span>
+    <span><span class="key">C</span> or <span class="key">R</span></span><span>C button</span>
+  </div>
+  <p>Most games open on a title screen and start with <span class="key">A</span>.
+     On a phone, on-screen buttons appear instead.</p>
+
+  <h3>How this was built</h3>
+  <p>Each entry was compiled from the archived source with the Arduino IDE 1.8.19 AVR
+     toolchain, targeting the ATmega328 at 16&nbsp;MHz, against Gamebuino Classic library 0.5.2.
+     A number of sketches needed small fixes to build on a modern avr-gcc &mdash; mostly
+     <code>PROGMEM</code> data that now has to be <code>const</code>, the removed
+     <code>prog_uchar</code> type, and pre-2014 library API calls. Those fixes were applied to
+     build-time copies; the source archive itself is untouched.
+     A few entries ship only as a prebuilt <code>.hex</code> from their own author and are
+     marked as such.
+     Screenshots were captured by running each build in the emulator under headless Chrome.</p>
+
+  <h3>Credits</h3>
+  <p>The emulator is <a href="https://github.com/Myndale/Simbuino" target="_blank" rel="noopener">Simbuino4Web</a>
+     by Mark Feldman (&ldquo;Myndale&rdquo;), MIT-licensed, adapted here into a standalone page
+     that loads a game from a URL.
+     The Gamebuino Classic and its library are by Aur&eacute;lien Rodot and contributors.
+     Every game and tool belongs to its own author and keeps its own licence &mdash; see each card,
+     and the <a href="https://github.com/joyrider3774/gamebuino_classic_source_codes" target="_blank" rel="noopener">source archive</a>
+     for the full licence notes. Several entries have <em>no licence specified at all</em> by
+     their original author; that is noted rather than assumed permissive.</p>
+
+  <p style="margin-top:2em">Built 2026-08-25.</p>
+</footer>
+
+<div id="game-overlay" class="hidden">
+  <div id="game-modal">
+    <button id="game-close-button" aria-label="Close">&times;</button>
+    <iframe id="game-frame" allow="autoplay; fullscreen" allowfullscreen></iframe>
+  </div>
+</div>
+
+<script>
+  // Play/title links stay real <a href> targets so right-click / middle-click
+  // / ctrl-click "open in new tab" and the no-JS fallback keep working; a
+  // plain left-click instead loads the same URL into an iframe overlay.
+  // Closing resets the iframe to about:blank rather than just hiding it -
+  // otherwise the emulator (and its audio) would keep running invisibly.
+  var gameOverlay = document.getElementById('game-overlay');
+  var gameFrame = document.getElementById('game-frame');
+
+  function openGame(url) {
+    gameFrame.src = url;
+    gameOverlay.classList.remove('hidden');
+  }
+
+  function closeGame() {
+    gameOverlay.classList.add('hidden');
+    gameFrame.src = 'about:blank';
+  }
+
+  document.querySelectorAll('a[data-play]').forEach(function (link) {
+    link.addEventListener('click', function (e) {
+      if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey)
+        return;
+      e.preventDefault();
+      openGame(link.getAttribute('href'));
+    });
+  });
+
+  document.getElementById('game-close-button').addEventListener('click', closeGame);
+
+  gameOverlay.addEventListener('click', function (e) {
+    if (e.target === gameOverlay) closeGame();
+  });
+
+  window.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && !gameOverlay.classList.contains('hidden')) closeGame();
+  });
+
+  // ---- filtering -------------------------------------------------------
+  var cards = Array.prototype.slice.call(document.querySelectorAll('.card'));
+  var search = document.getElementById('search');
+  var tabs = Array.prototype.slice.call(document.querySelectorAll('.tab'));
+  var countEl = document.getElementById('count');
+  var emptyEl = document.getElementById('empty');
+  var kind = 'all';
+
+  function apply() {
+    var q = search.value.trim().toLowerCase();
+    var shown = 0;
+    cards.forEach(function (card) {
+      var okKind = (kind === 'all') || (card.dataset.kind === kind);
+      var okText = !q || card.dataset.search.indexOf(q) !== -1;
+      var show = okKind && okText;
+      card.hidden = !show;
+      if (show) shown++;
+    });
+    countEl.textContent = shown + (shown === 1 ? ' entry' : ' entries');
+    emptyEl.hidden = shown !== 0;
+  }
+
+  search.addEventListener('input', apply);
+  tabs.forEach(function (tab) {
+    tab.addEventListener('click', function () {
+      kind = tab.dataset.kind;
+      tabs.forEach(function (t) { t.setAttribute('aria-pressed', String(t === tab)); });
+      apply();
+    });
+  });
+  apply();
+</script>
+
+</body>
+</html>
