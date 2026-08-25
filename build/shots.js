@@ -18,6 +18,13 @@ const OUT = path.join(SITE, 'screenshots');
 const SCALE = 4;                 // 84x48 -> 336x192
 const CONCURRENCY = 4;
 
+// how the frame is reached: run past the boot splash, then press A this many
+// times with a pause after each, then let the game settle before grabbing
+const PRE_FRAMES = 200;       // ~3.3 s
+const A_PRESSES = 4;
+const BETWEEN_FRAMES = 130;   // ~2.2 s after each press
+const SETTLE_FRAMES = 200;    // ~3.3 s before the grab
+
 // games that read data off an SD card need the card image mounted
 const NEEDS_SD = new Set(['B-Rally', 'gamebuino-community-rpg', 'sd_map_test']);
 
@@ -65,12 +72,6 @@ const PAGE_HELPERS = `
   };
 `;
 
-function score(c) {
-  // a blank or completely filled screen tells the reader nothing
-  if (!c || c.lit < 0.01 || c.lit > 0.92) return -1;
-  return c.edges;
-}
-
 async function shoot(browser, game) {
   const dest = path.join(OUT, game.slug + '.png');
   if (!force && fs.existsSync(dest)) return { slug: game.slug, skipped: true };
@@ -87,6 +88,7 @@ async function shoot(browser, game) {
 
     await page.goto(url, { waitUntil: 'load', timeout: 30000 });
     await page.evaluate(PAGE_HELPERS);
+    await page.evaluate(`var PRE_FRAMES=${PRE_FRAMES},A_PRESSES=${A_PRESSES},BETWEEN_FRAMES=${BETWEEN_FRAMES},SETTLE_FRAMES=${SETTLE_FRAMES};`);
 
     const ok = await page.evaluate(async () => {
       const wait = ms => new Promise(r => setTimeout(r, ms));
@@ -102,40 +104,46 @@ async function shoot(browser, game) {
       return { slug: game.slug, error: err || 'never became ready' };
     }
 
-    const cands = await page.evaluate(async (scale) => {
+    const shot = await page.evaluate(async (scale) => {
       const P = window.SimbuinoPlayer;
-      const out = [];
-      // past the library's boot splash and into gb.titleScreen()
-      await P.runFrames(200);
-      out.push(Object.assign({ tag: 'title' }, window.__grab(scale)));
-      // A starts the game from the title screen
-      await P.press('A', 10);
-      await P.runFrames(160);
-      out.push(Object.assign({ tag: 'play' }, window.__grab(scale)));
-      // some games put a menu or a "get ready" screen behind a second press
-      await P.press('A', 10);
-      await P.runFrames(120);
-      out.push(Object.assign({ tag: 'play2' }, window.__grab(scale)));
-      // ...and a difficulty select behind a third
-      await P.press('A', 10);
-      await P.runFrames(150);
-      out.push(Object.assign({ tag: 'play3' }, window.__grab(scale)));
-      return out;
+      const blank = c => !c || c.lit < 0.02 || c.lit > 0.92;
+
+      // Past the library's boot splash. gb.titleScreen() waits for A, and
+      // plenty of these sit behind a menu, a difficulty select and a "get
+      // ready" screen too, so press A several times with a pause after each
+      // and let the game settle before taking the frame.
+      await P.runFrames(PRE_FRAMES);
+      const title = Object.assign({ tag: 'title' }, window.__grab(scale));
+
+      const seen = [];
+      for (let i = 0; i < A_PRESSES; i++) {
+        await P.press('A', 10);
+        await P.runFrames(BETWEEN_FRAMES);
+        seen.push(Object.assign({ tag: 'press' + (i + 1) }, window.__grab(scale)));
+      }
+      await P.runFrames(SETTLE_FRAMES);
+      let c = Object.assign({ tag: 'settled' }, window.__grab(scale));
+
+      // a wipe or a flashing screen can leave that frame empty; give it longer
+      // and look again before deciding
+      for (let retry = 0; retry < 2 && blank(c); retry++) {
+        await P.runFrames(SETTLE_FRAMES * 2);
+        c = Object.assign({ tag: 'settled' }, window.__grab(scale));
+      }
+      if (!blank(c)) return c;
+
+      // The settled frame is what we want, but a few programs genuinely show
+      // nothing there -- a paint tool opens on an empty canvas, a snake starts
+      // as one pixel. Rather than leave the card with no image, fall back to
+      // the richest frame actually seen, and to the title card last of all.
+      const alt = seen.filter(x => !blank(x)).sort((a, b) => b.edges - a.edges)[0];
+      if (alt) return alt;
+      if (!blank(title)) return title;
+      return Object.assign({ blank: true }, c);
     }, SCALE);
 
-    // prefer actual gameplay over the title card, but only if it rendered
-    const ranked = ['play3', 'play2', 'play', 'title']
-      .map(tag => cands.find(c => c.tag === tag))
-      .filter(c => score(c) > 0);
-
-    let pick = ranked[0];
-    if (ranked.length > 1) {
-      // if a later screen is much emptier than the title card it is probably
-      // a transition or a wipe, so fall back to the richer frame
-      const best = ranked.reduce((a, b) => (score(b) > score(a) ? b : a));
-      if (score(best) > score(pick) * 2) pick = best;
-    }
-    if (!pick) return { slug: game.slug, error: 'every captured frame was blank' };
+    if (shot.blank) return { slug: game.slug, error: 'nothing rendered at any point' };
+    const pick = shot;
 
     fs.writeFileSync(dest, Buffer.from(pick.png.split(',')[1], 'base64'));
     return { slug: game.slug, tag: pick.tag, lit: +pick.lit.toFixed(3), edges: pick.edges };
@@ -164,7 +172,8 @@ async function shoot(browser, game) {
       const g = queue.shift();
       const r = await shoot(browser, g);
       results.push(r);
-      const note = r.skipped ? 'skip' : r.error ? 'FAIL ' + r.error : `${r.tag} lit=${r.lit} edges=${r.edges}`;
+      const note = r.skipped ? 'skip' : r.error ? 'FAIL ' + r.error
+        : `${r.tag === 'settled' ? '' : '[fallback ' + r.tag + '] '}lit=${r.lit} edges=${r.edges}`;
       console.log(`${results.length}/${games.length}  ${r.slug}  ${note}`);
     }
   }));
