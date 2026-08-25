@@ -234,6 +234,18 @@ Two things this repo depends on:
   screenshot. Nothing here is big enough to need LFS — the largest file is the
   1.5 MB SD card image — so all links stay plain relative paths.
 
+## Downloading a game
+
+Every card has a **.hex** button next to Play. That is the file a real
+Gamebuino Classic wants: copy it to the root of a FAT-formatted SD card and
+pick it from the console's loader.
+
+The console's loader reads DOS 8.3 short filenames off the card, so a download
+is offered under one â€” "Worlds Hardest Game" saves as `WORLDSHA.HEX`,
+"Gamebuino Catcher" as `CATCHER.HEX` â€” while the copy in this repository keeps
+its descriptive name. The short names are derived from the titles, with the
+redundant `GAMEBUINO` prefix dropped, and are unique across the collection.
+
 ## Source links on each card
 
 Two different links can appear on a card, and which one shows is derived from

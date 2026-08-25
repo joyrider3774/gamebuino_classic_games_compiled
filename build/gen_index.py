@@ -1,5 +1,5 @@
 """Generate index.html for the Gamebuino Classic web collection from site.json."""
-import os, json, html, datetime
+import os, re, json, html, datetime
 
 BUILD = r"C:\gbbuild"
 SITE = os.environ.get("GB_SITE", r"C:\github\gamebuino_classic_games_compiled")
@@ -215,6 +215,19 @@ CSS = """
 
   .play-button:hover { background: #a5efe0; }
 
+  .dl-button {
+    display: inline-block;
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid var(--panel-border);
+    text-decoration: none;
+    padding: 0.4em 0.7em;
+    border-radius: 5px;
+    font-size: 0.88em;
+  }
+
+  .dl-button:hover { color: var(--accent); border-color: var(--accent); }
+
   .src-link { font-size: 0.82em; color: var(--muted); text-decoration: none; }
   .src-link:hover { color: var(--link); }
 
@@ -370,6 +383,30 @@ JS = """
 """
 
 
+def short_83(e, used):
+    """A DOS 8.3 filename for the download.
+
+    The Gamebuino Classic's loader reads short names off a FAT card, so
+    "Worlds-Hardest-Game-Gamebuino.hex" is no use on real hardware. The file
+    keeps its descriptive name in this repository; only the name the browser
+    saves it under is shortened, and it is kept unique across the collection.
+    """
+    base = re.sub(r'[^A-Z0-9]', '', e['title'].upper())
+    # a good few of these are literally named "Gamebuino <something>"; the
+    # prefix says nothing here and would eat all eight characters
+    if len(base) > 9 and base.startswith('GAMEBUINO'):
+        base = base[9:]
+    base = base or re.sub(r'[^A-Z0-9]', '', e['slug'].upper()) or 'GAME'
+
+    name, n = base[:8], 1
+    while name in used:
+        n += 1
+        suffix = str(n)
+        name = base[:8 - len(suffix)] + suffix
+    used.add(name)
+    return name + '.HEX'
+
+
 def card_html(e):
     title = html.escape(e['title'])
     # the hex/sd URLs are fetched by player.html, so they must be relative
@@ -409,6 +446,11 @@ def card_html(e):
         bits.append('    <div class="meta">%s</div>' % ''.join(meta))
 
     actions = ['<a class="play-button" href="%s" data-play>&#9654; Play</a>' % play]
+    # The Gamebuino's own loader reads 8.3 names off the card, so the file is
+    # offered under one -- the copy on disk keeps its descriptive slug.
+    actions.append('<a class="dl-button" href="%s" download="%s" '
+                   'title="Download %s &ndash; ready to copy onto a Gamebuino SD card">'
+                   '&#11015; .hex</a>' % (e['hex'], e['dl'], e['dl']))
     if e['url']:
         actions.append('<a class="src-link" href="%s" target="_blank" rel="noopener">Original repo</a>' % html.escape(e['url']))
     # Only entries the archive really holds as files get an archived link. For
@@ -424,6 +466,9 @@ def card_html(e):
 
 def main():
     entries = json.load(open(os.path.join(BUILD, 'site.json')))
+    used = set()
+    for e in entries:
+        e['dl'] = short_83(e, used)
     games = sum(1 for e in entries if e['top'] == 'games')
     tools = sum(1 for e in entries if e['top'] == 'tools')
     built = datetime.date.today().isoformat()
