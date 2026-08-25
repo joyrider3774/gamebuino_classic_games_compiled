@@ -6,7 +6,7 @@ SITE = os.environ.get("GB_SITE", r"C:\github\gamebuino_classic_games_compiled")
 
 # entries that read a data file off the SD card, so the player mounts the
 # shared card image for them (see mksd.py for what is on it)
-NEEDS_SD = {'B-Rally', 'gamebuino-community-rpg', 'sd_map_test'}
+NEEDS_SD = {'B-Rally', 'gamebuino-community-rpg', 'sd_map_test', 'Wolfenduino', 'Gamebookuino'}
 
 CSS = """
   :root {
@@ -238,6 +238,11 @@ CSS = """
     color: var(--muted);
   }
 
+  .badge.flag {
+    border-color: #4d5f59;
+    color: #b6cdc5;
+  }
+
   #empty { color: var(--muted); text-align: center; padding: 3em 0; }
   #empty[hidden] { display: none; }
 
@@ -356,14 +361,16 @@ JS = """
   var countEl = document.getElementById('count');
   var emptyEl = document.getElementById('empty');
   var kind = 'all';
+  var source = null;
 
   function apply() {
     var q = search.value.trim().toLowerCase();
     var shown = 0;
     cards.forEach(function (card) {
       var okKind = (kind === 'all') || (card.dataset.kind === kind);
+      var okSource = !source || (card.dataset.source === source);
       var okText = !q || card.dataset.search.indexOf(q) !== -1;
-      var show = okKind && okText;
+      var show = okKind && okSource && okText;
       card.hidden = !show;
       if (show) shown++;
     });
@@ -374,7 +381,9 @@ JS = """
   search.addEventListener('input', apply);
   tabs.forEach(function (tab) {
     tab.addEventListener('click', function () {
-      kind = tab.dataset.kind;
+      // the three kind tabs and the source tab are one exclusive group
+      kind = tab.dataset.kind || 'all';
+      source = tab.dataset.source || null;
       tabs.forEach(function (t) { t.setAttribute('aria-pressed', String(t === tab)); });
       apply();
     });
@@ -422,8 +431,11 @@ def card_html(e):
     else:
         art = '<div class="noshot">no preview<br>available</div>'
 
-    bits = ['<div class="card" data-kind="%s" data-search="%s">' % (
-        e['top'], html.escape((e['title'] + ' ' + e['author'] + ' ' + e['desc'] + ' ' + e['slug']).lower())),
+    bits = ['<div class="card" data-kind="%s" data-source="%s" data-search="%s">' % (
+        e['top'],
+        'binary' if e.get('precompiled') else 'source',
+        html.escape((e['title'] + ' ' + e['author'] + ' ' + e['desc'] + ' ' + e['slug']
+                     + (' binary only precompiled' if e.get('precompiled') else '')).lower())),
         '  ' + art,
         '  <div class="body">',
         '    <h2><a href="%s" data-play>%s</a></h2>' % (play, title)]
@@ -440,8 +452,13 @@ def card_html(e):
         meta.append('<span class="badge" title="%s">%s</span>' % (html.escape(lic), html.escape(short)))
     if e['flash']:
         meta.append('<span>%s KB flash</span>' % round(e['flash']['bytes'] / 1024, 1))
-    if e['prebuilt']:
-        meta.append('<span class="badge" title="Shipped by its author as a prebuilt .hex; not rebuilt here">prebuilt&nbsp;hex</span>')
+    if e.get('precompiled'):
+        meta.append('<span class="badge flag" title="No source for this one survives anywhere. '
+                    'The archive recovered a compiled binary only, so it cannot be rebuilt.">'
+                    'binary&nbsp;only</span>')
+    elif e['prebuilt']:
+        meta.append('<span class="badge flag" title="Source exists, but this ships the author\u2019s own '
+                    'prebuilt .hex rather than a rebuild">prebuilt&nbsp;hex</span>')
     if meta:
         bits.append('    <div class="meta">%s</div>' % ''.join(meta))
 
@@ -471,6 +488,7 @@ def main():
         e['dl'] = short_83(e, used)
     games = sum(1 for e in entries if e['top'] == 'games')
     tools = sum(1 for e in entries if e['top'] == 'tools')
+    binary = sum(1 for e in entries if e.get('precompiled'))
     built = datetime.date.today().isoformat()
 
     cards = '\n\n      '.join(card_html(e) for e in entries)
@@ -511,6 +529,7 @@ def main():
   <button class="tab" type="button" data-kind="all" aria-pressed="true">All</button>
   <button class="tab" type="button" data-kind="games" aria-pressed="false">Games ({games})</button>
   <button class="tab" type="button" data-kind="tools" aria-pressed="false">Tools ({tools})</button>
+  <button class="tab" type="button" data-source="binary" aria-pressed="false">Binary only ({binary})</button>
   <span class="count" id="count"></span>
 </div>
 

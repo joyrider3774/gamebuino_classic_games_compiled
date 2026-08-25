@@ -26,7 +26,7 @@ const BETWEEN_FRAMES = 130;   // ~2.2 s after each press
 const SETTLE_FRAMES = 200;    // ~3.3 s before the grab
 
 // games that read data off an SD card need the card image mounted
-const NEEDS_SD = new Set(['B-Rally', 'gamebuino-community-rpg', 'sd_map_test']);
+const NEEDS_SD = new Set(['B-Rally', 'gamebuino-community-rpg', 'sd_map_test', 'Wolfenduino', 'Gamebookuino']);
 
 // cruiser fires a bullet on A and dereferences a wild pointer doing it
 // (X = 0x9306, past the end of RAM). The standalone Simbuino crashes on

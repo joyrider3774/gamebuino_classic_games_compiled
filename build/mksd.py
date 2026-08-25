@@ -24,10 +24,15 @@ IMAGE = os.path.join(SITE, "webemulator", "sdcard.img")
 # 8.3 name on the card  ->  file in the source archive
 FILES = {
     # gamebuino-community-rpg: its map/text data and its sound bank
-    'DATA.DAT': r'games\gamebuino-community-rpg\src\DATA.DAT',
-    'SOUND.DAT': r'games\gamebuino-community-rpg\src\SOUND.DAT',
+    'DATA.DAT': 'games/gamebuino-community-rpg/src/DATA.DAT',
+    'SOUND.DAT': 'games/gamebuino-community-rpg/src/SOUND.DAT',
     # sd_map_test's tilemap
-    'SDMAP.DAT': r'tools\sd_map_test\SDMAP.DAT',
+    'SDMAP.DAT': 'tools/sd_map_test/SDMAP.DAT',
+    # Wolfenduino streams its compressed level data off the card
+    'WOLF3D.DAT': 'games/Wolfenduino/wolf3d.dat',
+    # Gamebookuino reads the book itself off the card; the build here is DF01,
+    # the French edition of Fighting Fantasy's Warlock of Firetop Mountain
+    'DF01.LDV': 'games/Gamebookuino/books+LDV/DF01.LDV',
 }
 
 # a fixed timestamp keeps the image byte-identical across rebuilds

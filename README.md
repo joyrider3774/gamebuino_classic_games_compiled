@@ -21,7 +21,7 @@ for the full licence notes.
 
 | Path | What it is |
 |---|---|
-| [`index.html`](index.html) | The collection page — 105 games, 14 tools |
+| [`index.html`](index.html) | The collection page — 137 games, 20 tools |
 | [`games/`](games/) | One compiled `.hex` per game |
 | [`tools/`](tools/) | One compiled `.hex` per non-game tool |
 | [`screenshots/`](screenshots/) | One 336×192 PNG per entry, captured from the emulator |
@@ -51,8 +51,9 @@ picker, so `webemulator/` is a standalone rebuild of it:
     *unsigned* one, but the port sign-extended both, so the product was wrong
     whenever the second operand was >= 128. avr-gcc emits `MULSU` inside its
     16×16 signed multiply helpers, so this affected fixed-point arithmetic.
-    116 of the 119 entries execute `MULSU`; two are measurably affected by the
-    bug (Super Crate Buino, Community RPG).
+    Nearly every entry executes `MULSU` — 116 of the 119 present when this was
+    measured — though only two were measurably affected by the bug itself
+    (Super Crate Buino, Community RPG).
   - `SdDevice.js` — reads a byte past the end of a card image as `0` instead of
     clocking `undefined` out over SPI, so a card image can be stored trimmed of
     its trailing empty space.
@@ -99,27 +100,49 @@ on-screen buttons appear instead.
 ## How the games were built
 
 Source comes from
-[gamebuino_classic_source_codes](https://github.com/joyrider3774/gamebuino_classic_source_codes)
-— 104 game folders and 16 tool folders. That yields 119 entries because:
+[gamebuino_classic_source_codes](https://github.com/joyrider3774/gamebuino_classic_source_codes),
+which files its finds in four categories: `games/` (111) and `tools/` (17) hold
+entries with real source, and `games_precompiled/` (25) and `tools_precompiled/`
+(6) hold ones where only a compiled binary survives. That yields 157 entries
+here because:
 
 - `StijnCaerts-Gamebuino` holds **two** separate games (Pong and Snake), so it
   splits into two entries.
-- Two tool folders are deliberately left out. `Gamebuino-Classic-Games-Compilation`
-  is not a program: it is the official ready-made SD card holding 50 prebuilt
-  `.HEX` files, each of which already has its own entry here.
+- Three folders are deliberately left out. `Gamebuino-Classic-Games-Compilation`
+  and `Gamebuino-Classic_Games` are not programs: they are ready-made SD cards
+  bundling 50 and 141 prebuilt `.HEX` files, and the individual titles mined out
+  of them are exactly what the `games_precompiled/` category now holds.
   `gamebuinoEducation` is a teaching course under a custom
   “Educational Use License” that is non-commercial only and restricts
   redistribution and mirroring, so its build is not published here.
 
 Every other folder in the archive is represented.
 
+### Built from source, or binary only
+
+**122 entries are compiled from source here.** The other 35 ship a binary, and
+each card says which:
+
+- **29 are marked `binary only`** — the archive's `games_precompiled/` and
+  `tools_precompiled/` categories. No source for these survives anywhere; the
+  archive recovered a compiled `.HEX` and nothing else, so they cannot be
+  rebuilt. The **Binary only** tab on the page filters to exactly these.
+- **6 are marked `prebuilt hex`** — source exists, but the author's own
+  binary is what runs here (see below).
+
+Most of the binary-only titles were recovered by decoding the `.HEX` files in a
+fan-made SD-card compilation back to raw binary and reading the plaintext
+strings Gamebuino sketches leave in flash — title screens, credits, "Game
+Over" text — to identify what each one actually was.
+
 Each entry was compiled with the Arduino IDE 1.8.19 AVR toolchain (avr-gcc 7.3)
 for `arduino:avr:uno` — the ATmega328 at 16 MHz — against Gamebuino Classic
 library 0.5.2.
 
-Five entries ship as a prebuilt `.hex` from their own author and are marked
-`prebuilt hex` on the page. **DarkTower**, **DeathMaze** and
-**Gamebuino-SuperSpaceShooter** have no `.ino` in the archive at all.
+Six entries ship as a prebuilt `.hex` from their own author and are marked
+`prebuilt hex` on the page. **DarkTower**, **DeathMaze**,
+**Gamebuino-SuperSpaceShooter** and **MAKERbuino-Etch-A-Sketch** sit in a
+source-bearing folder but kept only their build.
 **B-Rally** ships a Simbuino-specific build alongside its normal one, which is
 the one that runs here. **sokobuino** does rebuild cleanly, but the resulting
 binary misbehaves: `current_gui_state` ends up holding 4, which matches no
@@ -181,19 +204,23 @@ his ≈2,450, 117 distinct output levels against 118), where the stock 1-channel
 build managed a couple of hundred. The other three all gained sustained audio
 against a 1-channel control of the same sketch.
 
-### Known limitation
+### Known limitations
 
-**cruiser** — a real portal-based 3D engine — renders correctly, but firing a
-shot with **A** crashes it. It dereferences a wild pointer while doing so
-(`X = 0x9306`, past the 0x900 end of RAM, inside
-`loop_through_segment_walls`). Real hardware tolerates that read; both this
-emulator and the standalone Simbuino index an array and fault. It is the game's
-own bug, not a build or emulator problem, and its screenshot is therefore taken
-without pressing A.
+**LunarRun** compiles cleanly but renders nothing under this emulator — three
+lit pixels and no more. The author's own `LUNARRUN.HEX`, which the archive also
+ships, behaves identically, so this is not the rebuild: it is the emulator or
+the game itself. It is the one entry with no preview image.
+
+**cruiser** — a portal-based 3D engine — renders correctly, but firing a shot
+with **A** crashes it. It dereferences a wild pointer while doing so
+(`X = 0x9306`, past the 0x900 end of RAM, inside `loop_through_segment_walls`).
+Real hardware tolerates that read; both this emulator and the standalone
+Simbuino index an array and fault. It is the game's own bug, not a build or
+emulator problem, and its screenshot is therefore taken without pressing A.
 
 ### The SD card
 
-Three entries read data files off the card, so the player mounts a shared
+Five entries read data files off the card, so the player mounts a shared
 FAT16 image, [`webemulator/sdcard.img`](webemulator/sdcard.img), for them.
 It is built by [`build/mksd.py`](build/mksd.py) and holds:
 
@@ -202,6 +229,12 @@ It is built by [`build/mksd.py`](build/mksd.py) and holds:
 | `B-RALLY.DAT` | B-Rally | the card image the author shipped |
 | `DATA.DAT`, `SOUND.DAT` | Community RPG | `games/gamebuino-community-rpg/src/` |
 | `SDMAP.DAT` | sd_map_test | `tools/sd_map_test/` |
+| `WOLF3D.DAT` | Wolfenduino | `games/Wolfenduino/` — its compressed level data |
+| `DF01.LDV` | Gamebookuino | `games/Gamebookuino/books+LDV/` — the book itself |
+
+Without their data both of the last two say so plainly rather than failing
+quietly: Wolfenduino draws "SD CARD MOUNT ERROR", Gamebookuino stops at its
+title screen.
 
 The base image was a "superfloppy" — `mkfs.fat` straight onto the device, no
 partition table. Petit FatFs (B-Rally) accepts that, but GB_Fat (Community RPG)

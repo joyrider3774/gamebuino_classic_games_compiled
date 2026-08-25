@@ -11,7 +11,7 @@ BUILD = r"C:\gbbuild"
 SITE = os.environ.get("GB_SITE", r"C:\github\gamebuino_classic_games_compiled")
 
 ROW = re.compile(r'^\|\s*(.+?)\s*\|\s*(.+?)\s*\|\s*(.+?)\s*\|\s*(.+?)\s*\|\s*$')
-LINK = re.compile(r'\[((?:games|tools)/[^\]]+)\]\(([^)]+)\)\s*(?:\((.*)\))?\s*$')
+LINK = re.compile(r'\[((?:games|tools)(?:_precompiled)?/[^\]]+)\]\(([^)]+)\)\s*(?:\((.*)\))?\s*$')
 
 
 def submodule_paths():
@@ -115,17 +115,23 @@ def main():
 
         folder = t['top'] + '/' + t['entry']
         is_submodule = folder in submodules
+        # the archive files binary-only recoveries in their own category; the
+        # site keeps two folders and marks the distinction on the card instead
+        site_dir = t.get('site_dir') or t['top']
         entries.append({
             'slug': t['slug'],
-            'top': t['top'],
+            'top': site_dir,
             'title': title,
             'author': m['author'],
             'license': m['license'],
             'url': m['url'],
             'desc': m['desc'],
-            'hex': t['top'] + '/' + t['slug'] + '.hex',
+            'hex': site_dir + '/' + t['slug'] + '.hex',
             'shot': ('screenshots/' + t['slug'] + '.png') if t['slug'] in shots else None,
             'prebuilt': r.get('source') == 'prebuilt',
+            # no source for this one exists anywhere; the archive recovered a
+            # compiled binary only
+            'precompiled': bool(t.get('precompiled')),
             'flash': flash,
             'submodule': is_submodule,
             # only entries the archive really holds get an archive link
@@ -146,6 +152,9 @@ def main():
     subs = [e for e in entries if e['submodule']]
     print('submodules (upstream link only):', len(subs),
           '| really archived here:', len(entries) - len(subs))
+    print('binary-only recoveries:', sum(1 for e in entries if e['precompiled']),
+          '| built from source:', sum(1 for e in entries
+                                      if not e['precompiled'] and not e['prebuilt']))
     orphans = [e['slug'] for e in entries if not e['archive'] and not e['url']]
     if orphans:
         print('WARNING - no source link at all:', orphans)

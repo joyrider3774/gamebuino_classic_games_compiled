@@ -110,7 +110,7 @@ The library draws `GRAY` as a checkerboard that inverts every frame —
 `(x ^ g) & 1` — so it is spatial *and* temporal dithering. On a one-bit panel
 that only resolves into a mid-tone once the response time is simulated;
 otherwise it shimmers in the player, and a screenshot catches whichever phase
-the frame happened to hold. 15 of the 119 entries use `GRAY`.
+the frame happened to hold. 15 entries use `GRAY`.
 
 `Lcd.js` had no equivalent — it copied pixel state straight to the canvas. The
 algorithm is ported verbatim, along with the three-level rendering it needs

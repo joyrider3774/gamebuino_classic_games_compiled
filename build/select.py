@@ -15,11 +15,18 @@ DEAD = ('/archive/', '/old/', '/other/', '/backup/', '/test/', '/tests/')
 # ready-made SD card holding 50 prebuilt .HEX games that are each already
 # covered by their own entry. Kept out of the playable list on purpose.
 SKIP_ENTRY = {
-    'tools/Gamebuino-Classic-Games-Compilation',
+    # Neither of these is a program: both are ready-made SD cards bundling
+    # dozens of prebuilt .HEX games. The archive's own games_precompiled/
+    # category is where the individual titles mined out of them now live.
+    'tools_precompiled/Gamebuino-Classic-Games-Compilation',
+    'tools_precompiled/Gamebuino-Classic_Games',
     # custom "Educational Use License": non-commercial only, and it restricts
     # redistribution/mirroring, so its build is not published here
     'tools/gamebuinoEducation',
 }
+
+# the archive files binary-only finds separately; those keep the distinction
+PRECOMPILED_TOPS = ('games_precompiled', 'tools_precompiled')
 
 # for multi-sketch entries, keep only sketch dirs ending with one of these
 FORCE = {
@@ -98,11 +105,32 @@ for o in out:
     if o['slug'] in PREBUILT:
         o['use_prebuilt'] = PREBUILT[o['slug']]
 
+# An entry with no sketch but exactly one .hex is a binary-only recovery: ship
+# the binary. This covers the whole games_precompiled/ + tools_precompiled/
+# categories as well as the odd source-bearing folder that only kept its build.
+for o in out:
+    if o.get('use_prebuilt') or o.get('main'):
+        continue
+    hexes = [h for h in o['prebuilt_hex'] if not h.lower().endswith('.with_bootloader.hex')]
+    if len(hexes) == 1:
+        o['use_prebuilt'] = hexes[0]
+
+# the site keeps two folders; the precompiled categories fold into them and are
+# told apart by their own flag rather than by a directory
+for o in out:
+    o['precompiled'] = o['top'] in PRECOMPILED_TOPS
+    o['site_dir'] = 'tools' if o['top'].startswith('tools') else 'games'
+
 json.dump(out, open(r'C:\gbbuild\targets.json', 'w'), indent=1)
 print('targets:', len(out),
-      '| games:', sum(1 for o in out if o['top'] == 'games'),
-      '| tools:', sum(1 for o in out if o['top'] == 'tools'))
-print('no sketch:', [o['slug'] for o in out if not o['main']])
+      '| games:', sum(1 for o in out if o['site_dir'] == 'games'),
+      '| tools:', sum(1 for o in out if o['site_dir'] == 'tools'))
+print('  built from source:', sum(1 for o in out if o.get('main')),
+      '| shipped as a binary:', sum(1 for o in out if o.get('use_prebuilt')),
+      '| of those, binary-only finds:', sum(1 for o in out if o['precompiled']))
+orphan = [o['slug'] for o in out if not o.get('main') and not o.get('use_prebuilt')]
+if orphan:
+    print('  NO SOURCE AND NO SINGLE HEX:', orphan)
 for o in out:
     if o['slug'] != o['entry']:
         print('  split:', o['slug'], '<-', o['sketch_rel'])

@@ -72,6 +72,10 @@ def stage(t):
             if os.path.exists(new_dir):
                 shutil.rmtree(new_dir, ignore_errors=True)
             os.rename(sk_dir, new_dir)
+        # for the many repos whose sketch sits at the top level, that rename
+        # just moved the game root as well
+        if os.path.normcase(sk_dir) == os.path.normcase(dst_game):
+            dst_game = new_dir
         sk_dir = new_dir
 
     apply_fixups(t, sk_dir, dst_game)
@@ -122,10 +126,17 @@ def private_library(game_root):
 
 def find_own_settings(sk_dir, game_root):
     """The game's own copy of the library's settings.c, if it ships one."""
+    skip = {'.git', 'libraries', 'lib'}
     for root in (sk_dir, game_root):
         for dirpath, dirnames, filenames in os.walk(root):
-            dirnames[:] = [d for d in dirnames if d not in ('.git', 'libraries', 'lib')]
+            # a game that vendors its library under Libraries/ must not have
+            # that copy's settings.c mistaken for one of its own
+            dirnames[:] = [d for d in dirnames if d.lower() not in skip]
             if 'settings.c' in filenames:
+                # ...but a settings.c sitting in a vendored library's utility/
+                # folder belongs to that library, not to the game
+                if os.path.isfile(os.path.join(dirpath, os.pardir, 'Gamebuino.h')):
+                    continue
                 p = os.path.join(dirpath, 'settings.c')
                 text = open(p, encoding='utf-8', errors='replace').read()
                 if 'NUM_CHANNELS' in text and 'SETTINGS_C' in text:
@@ -138,6 +149,31 @@ def find_own_settings(sk_dir, game_root):
 # second holds constants that belong to a particular library release.
 EDITABLE_MARKER = 'SETTINGS YOU CAN EDIT'
 LEAVE_ALONE_MARKER = 'LEAVE THE FOLLOWING SETTINGS ALONE'
+
+
+def vendored_library(game_root):
+    """Move a library the game ships with it onto the builder's search path.
+
+    A few of these repositories carry their own patched copy of the Gamebuino
+    library next to the sketch (Gamebookuino's adds a popup(const char*)
+    overload its code depends on). arduino-builder wants a directory *of*
+    libraries, so the copy is relocated under <game>/libraries/, which build.py
+    already passes with -libraries.
+    """
+    dest_root = os.path.join(game_root, 'libraries')
+    found = []
+    for name in sorted(os.listdir(game_root)):
+        d = os.path.join(game_root, name)
+        if not os.path.isdir(d) or name.lower() in ('libraries', 'lib', '.git'):
+            continue
+        if os.path.isfile(os.path.join(d, 'Gamebuino.h')):
+            found.append((name, d))
+    for name, d in found:
+        os.makedirs(dest_root, exist_ok=True)
+        dst = os.path.join(dest_root, name)
+        if not os.path.isdir(dst):
+            shutil.copytree(d, dst, ignore=ignore_vcs)
+    return [n for n, _ in found]
 
 
 def configure_library(t, sk_dir, game_root):
@@ -180,14 +216,92 @@ def configure_library(t, sk_dir, game_root):
     open(settings, 'w', encoding='utf-8').write(new)
 
 
+def progmem_const(sk_dir, names=None):
+    """Make PROGMEM declarations const, as avr-gcc has required since 4.6.
+
+    Handles the spellings these sketches use, leaves anything already const or
+    `extern` alone, and keeps PROGMEM in place rather than dropping it (which
+    would move the data into the 2 KB of RAM). Pass `names` to limit the change
+    to particular variables.
+    """
+    want = set(names) if names else None
+
+    def fix(line):
+        if 'PROGMEM' not in line or re.search(r'\bextern\b', line):
+            return line
+        head, sep, tail = line.partition('=')
+        if not sep:
+            m = re.match(r'^(\s*)([\w\s\*]+?\s+(\w+)\s*\[[^\]]*\])\s*PROGMEM\b', line)
+            if m and not re.search(r'\bconst\b', line):
+                if want and m.group(3) not in want:
+                    return line
+                return line.replace(m.group(2), 'const ' + m.group(2), 1)
+            return line
+
+        # PROGMEM <type>* name[] =   ->   const <type>* const name[] PROGMEM =
+        m = re.match(r'^(\s*)PROGMEM\s+(?:const\s+)?(.+?)\s*(\*+)\s*(\w+)\s*(\[[^\]]*\])\s*$', head)
+        if m:
+            if want and m.group(4) not in want:
+                return line
+            return (m.group(1) + 'const ' + m.group(2) + m.group(3) + ' const '
+                    + m.group(4) + m.group(5) + ' PROGMEM =' + tail)
+
+        # PROGMEM <type> name[] =    ->   const <type> name[] PROGMEM =
+        m = re.match(r'^(\s*)PROGMEM\s+(?:const\s+)?([\w\s]+?)\s+(\w+)\s*(\[[^\]]*\])\s*$', head)
+        if m:
+            if want and m.group(3) not in want:
+                return line
+            return (m.group(1) + 'const ' + m.group(2) + ' ' + m.group(3)
+                    + m.group(4) + ' PROGMEM =' + tail)
+
+        # const <type>* name[] PROGMEM =  ->  const <type>* const name[] PROGMEM =
+        # (the elements are const, but the array itself has to be too)
+        m = re.match(r'^(\s*)(.*\*)\s*(\w+)\s*(\[[^\]]*\])\s*PROGMEM\s*$', head)
+        if m and not re.search(r'\*\s*const\s*$', m.group(2) + ' '):
+            if want and m.group(3) not in want:
+                return line
+            lead = m.group(2) if re.match(r'^\s*const\b', m.group(2)) else 'const ' + m.group(2).lstrip()
+            return (m.group(1) + lead + ' const ' + m.group(3) + m.group(4)
+                    + ' PROGMEM =' + tail)
+
+        if re.search(r'\bconst\b', head):
+            return line
+
+        # <type> name[] PROGMEM =    ->   const <type> name[] PROGMEM =
+        m = re.match(r'^(\s*)([\w\s\*]+?\s+(\w+)\s*\[[^\]]*\])\s*PROGMEM\s*$', head)
+        if m:
+            if want and m.group(3) not in want:
+                return line
+            return line.replace(m.group(2), 'const ' + m.group(2), 1)
+        return line
+
+    for dirpath, dirnames, filenames in os.walk(sk_dir):
+        dirnames[:] = [d for d in dirnames if d.lower() != '.git']
+        for fn in filenames:
+            if not fn.lower().endswith(SRC_EXT):
+                continue
+            fp = os.path.join(dirpath, fn)
+            with open(fp, encoding='utf-8', errors='surrogateescape') as f:
+                lines = f.read().split(chr(10))
+            out = [fix(l) for l in lines]
+            if out != lines:
+                with open(fp, 'w', encoding='utf-8', errors='surrogateescape') as f:
+                    f.write(chr(10).join(out))
+
+
 def apply_fixups(t, sk_dir, game_root):
     strip_nbsp(sk_dir)
-    configure_library(t, sk_dir, game_root)
+    vendored = vendored_library(game_root)
+    # a game that brings its own library keeps it; do not shadow it with the
+    # installed one
+    if not vendored:
+        configure_library(t, sk_dir, game_root)
     fx = os.path.join(BUILD, 'fixups', t['slug'] + '.py')
     if os.path.isfile(fx):
         env = {'SKETCH_DIR': sk_dir, 'GAME_ROOT': game_root,
                'SLUG': t['slug'], 'MAIN': t['main'],
-               'SRC_ROOT': SRC_ROOT, 'BUILD': BUILD}
+               'SRC_ROOT': SRC_ROOT, 'BUILD': BUILD,
+               'progmem_const': progmem_const}
         code = compile(open(fx, encoding='utf-8').read(), fx, 'exec')
         exec(code, env)
 
@@ -223,12 +337,18 @@ def compile_one(t, worker):
     libs = [os.path.join(ARDUINO, 'portable', 'sketchbook', 'libraries')]
     if os.path.isdir(EXTRA_LIBS):
         libs.insert(0, EXTRA_LIBS)
-    # a sketch that vendors its own libraries/ folder gets it too
-    game_root = os.path.join(STAGE, slug, t['entry'])
-    for cand in ('libraries', 'lib', 'Libraries'):
-        p = os.path.join(game_root, cand)
-        if os.path.isdir(p):
-            libs.insert(0, p)
+    # A sketch that vendors its own libraries/ folder gets it too. Search for
+    # it rather than deriving the path: staging renames the sketch directory to
+    # match its main .ino, and for the many repos whose sketch sits at the top
+    # level that renames the game root along with it.
+    stage_root = os.path.join(STAGE, slug)
+    for depth_root, dirnames, _files in os.walk(stage_root):
+        if depth_root[len(stage_root):].count(os.sep) > 2:
+            dirnames[:] = []
+            continue
+        for d in dirnames:
+            if d.lower() in ('libraries', 'lib'):
+                libs.insert(0, os.path.join(depth_root, d))
 
     cmd = [os.path.join(ARDUINO, 'arduino-builder.exe'), '-compile',
            '-hardware', os.path.join(ARDUINO, 'hardware'),

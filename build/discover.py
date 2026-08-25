@@ -21,7 +21,7 @@ def has_setup_loop(path):
     return bool(re.search(r'\bvoid\s+setup\s*\(', t)) and bool(re.search(r'\bvoid\s+loop\s*\(', t))
 
 results = []
-for top in ('games', 'tools'):
+for top in ('games', 'tools', 'games_precompiled', 'tools_precompiled'):
     base = os.path.join(ROOT, top)
     if not os.path.isdir(base):
         continue
