@@ -28,6 +28,11 @@ const SETTLE_FRAMES = 200;    // ~3.3 s before the grab
 // games that read data off an SD card need the card image mounted
 const NEEDS_SD = new Set(['B-Rally', 'gamebuino-community-rpg', 'sd_map_test']);
 
+// cruiser fires a bullet on A and dereferences a wild pointer doing it
+// (X = 0x9306, past the end of RAM). The standalone Simbuino crashes on
+// that too, so it is the game's own bug -- capture it flying instead.
+const SKIP_A = new Set(['cruiser']);
+
 const args = process.argv.slice(2);
 const only = args.includes('--only')
   ? new Set(args[args.indexOf('--only') + 1].split(','))
@@ -88,7 +93,7 @@ async function shoot(browser, game) {
 
     await page.goto(url, { waitUntil: 'load', timeout: 30000 });
     await page.evaluate(PAGE_HELPERS);
-    await page.evaluate(`var PRE_FRAMES=${PRE_FRAMES},A_PRESSES=${A_PRESSES},BETWEEN_FRAMES=${BETWEEN_FRAMES},SETTLE_FRAMES=${SETTLE_FRAMES};`);
+    await page.evaluate(`var PRE_FRAMES=${PRE_FRAMES},A_PRESSES=${A_PRESSES},BETWEEN_FRAMES=${BETWEEN_FRAMES},SETTLE_FRAMES=${SETTLE_FRAMES},PRESS_A=${!SKIP_A.has(game.slug)};`);
 
     const ok = await page.evaluate(async () => {
       const wait = ms => new Promise(r => setTimeout(r, ms));
@@ -116,11 +121,12 @@ async function shoot(browser, game) {
       const title = Object.assign({ tag: 'title' }, window.__grab(scale));
 
       const seen = [];
-      for (let i = 0; i < A_PRESSES; i++) {
+      for (let i = 0; i < (PRESS_A ? A_PRESSES : 0); i++) {
         await P.press('A', 10);
         await P.runFrames(BETWEEN_FRAMES);
         seen.push(Object.assign({ tag: 'press' + (i + 1) }, window.__grab(scale)));
       }
+      if (!PRESS_A) await P.runFrames(BETWEEN_FRAMES * A_PRESSES);
       await P.runFrames(SETTLE_FRAMES);
       let c = Object.assign({ tag: 'settled' }, window.__grab(scale));
 

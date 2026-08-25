@@ -36,16 +36,32 @@ of the Nokia 5110 LCD, the buttons, the speaker and an SPI SD card. Upstream it
 ships as an ASP.NET MVC application whose only way to load a game is a file
 picker, so `webemulator/` is a standalone rebuild of it:
 
-- `webemulator/js/` — the emulator core, taken from upstream with two fixes:
+- `webemulator/js/` — the emulator core, taken from upstream with four fixes:
   - `AtmelContext.js` — `UpdateInterruptFlags()` tested a bare `SREG`, which is
-    undefined (everywhere else the core writes `AtmelContext.SREG`). It threw a
-    `ReferenceError` out of the frame loop, freezing any sketch that reached
-    that path — sokobuino's own released `.hex` stalls on frame 1 without this.
-    Only the name is qualified; the comparison is left exactly as upstream had
-    it, so interrupt behaviour is unchanged.
+    undefined in the port (everywhere else it writes `AtmelContext.SREG`). It
+    threw a `ReferenceError` out of the frame loop, freezing any sketch that
+    reached that path — sokobuino's own released `.hex` stalls on frame 1
+    without it.
+  - `AtmelProcessor.js` — `ASR` sign-extends its operand before shifting, so
+    the result is negative for any input >= 128. The port stored it into the
+    register file unmasked, leaving a negative number in an array the flag
+    lookup tables are indexed by. This is what stopped **cruiser** rendering.
+  - `AtmelProcessor.js` — `MULSU` multiplies a *signed* operand by an
+    *unsigned* one, but the port sign-extended both, so the product was wrong
+    whenever the second operand was >= 128. avr-gcc emits `MULSU` inside its
+    16×16 signed multiply helpers, so this affected fixed-point arithmetic.
+    116 of the 119 entries execute `MULSU`; two are measurably affected by the
+    bug (Super Crate Buino, Community RPG).
   - `SdDevice.js` — reads a byte past the end of a card image as `0` instead of
     clocking `undefined` out over SPI, so a card image can be stored trimmed of
     its trailing empty space.
+
+  Simbuino ships two emulators that do **not** share code — a C# desktop
+  application and this JavaScript port — and the port has drifted from the C#
+  core. Both the `SREG` and `MULSU` fixes simply make the JavaScript behave the
+  way the C# already does. [`webemulator/upstream/`](webemulator/upstream/)
+  holds byte-exact copies of the three modified files plus the complete patch,
+  and records what else was compared between the two cores.
 - `webemulator/player.js` — replaces upstream's `Simulation.js`. Same emulator
   lifecycle, but it loads a game from the URL, adds arrow keys and on-screen
   touch controls, and exposes a small hook the screenshot tool drives.
@@ -158,12 +174,13 @@ against a 1-channel control of the same sketch.
 
 ### Known limitation
 
-**cruiser** compiles correctly (24,432 bytes, a real portal-based 3D engine) but
-does not render under this emulator: it runs, and the backlight comes on, but
-the LCD never receives any data after the first few milliseconds. There is no
-independently-built `.hex` of it anywhere in the archive to compare against, so
-whether this is the emulator or the modern-toolchain rebuild is unresolved. It
-is listed with no preview image.
+**cruiser** — a real portal-based 3D engine — renders correctly, but firing a
+shot with **A** crashes it. It dereferences a wild pointer while doing so
+(`X = 0x9306`, past the 0x900 end of RAM, inside
+`loop_through_segment_walls`). Real hardware tolerates that read; both this
+emulator and the standalone Simbuino index an array and fault. It is the game's
+own bug, not a build or emulator problem, and its screenshot is therefore taken
+without pressing A.
 
 ### The SD card
 

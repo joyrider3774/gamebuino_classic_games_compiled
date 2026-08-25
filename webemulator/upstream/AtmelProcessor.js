@@ -526,12 +526,7 @@
 						AtmelContext.SREG.C.set(Rd & 1);
 						AtmelContext.SREG.S.set(AtmelContext.SREG.N.get() ^ AtmelContext.SREG.V.get());
 						AtmelContext.SREG.V.set(AtmelContext.SREG.N.get() ^ AtmelContext.SREG.C.get());
-						// ASR sign-extends Rd before shifting, so R is negative for
-						// any Rd >= 128. AtmelContext.R is a plain array, so storing
-						// it unmasked leaves a negative number in the register file,
-						// which then poisons the FlagsAdd/FlagsSub table lookups that
-						// index on register values. The C# core masks here.
-						AtmelContext.R[d] = R & 0xff;
+						AtmelContext.R[d] = R;
 						AtmelContext.Clock++;
 						AtmelContext.PC++;
 					}
@@ -1316,14 +1311,8 @@
 						var r = 16 + ((opcode & 0x07));
 						var Rd = AtmelContext.R[d];
 						Rd = (Rd < 128) ? Rd : -(0x100 - Rd);
-						// MULSU multiplies a SIGNED Rd by an UNSIGNED Rr, so Rr is
-						// deliberately not sign-extended here. The C# core this file
-						// was ported from has it right -- (sbyte)Rd * (byte)Rr -- but
-						// the port sign-extended both, giving the wrong product
-						// whenever Rr >= 128. avr-gcc emits MULSU inside its 16x16
-						// signed multiply helpers, so this affected any sketch doing
-						// fixed-point arithmetic.
 						var Rr = AtmelContext.R[r];
+						Rr = (Rr < 128) ? Rr : -(0x100 - Rr);
 						var R = Rd * Rr;
 						AtmelContext.R[0] = R & 0xff;
 						AtmelContext.R[1] = (R >> 8) & 0xff;
