@@ -76,6 +76,19 @@ $(function () {
 
 			$('#reset').click(function () { self.Reset(); });
 			$('#sound').click(function () { self.ToggleSound(); });
+			$('#gray').click(function () { self.SetPersistence(!Lcd.Persistence); });
+
+			// Gamebuino's GRAY is a pixel toggled every frame on a one-bit
+			// panel, so it needs the LCD's response time simulated to read as a
+			// mid-tone rather than a flicker. On by default here (upstream's
+			// standalone emulator defaults it off); the choice sticks per
+			// browser, and ?gray=0 overrides it for a single link.
+			var pref = param('gray');
+			if (pref === null) {
+				try { pref = localStorage.getItem('simbuino.gray'); } catch (e) { pref = null; }
+			}
+			this.SetPersistence(pref === null ? true
+			                                  : (pref === '1' || pref === 'on' || pref === 'true'));
 
 			setInterval(function () { self.Update(); }, 1000 / this.FrameRate);
 		},
@@ -139,6 +152,13 @@ $(function () {
 			});
 		},
 
+		SetPersistence: function (on) {
+			Lcd.Persistence = !!on;
+			Lcd.Reset();
+			$('#gray').text('Grey blend: ' + (on ? 'on' : 'off'));
+			try { localStorage.setItem('simbuino.gray', on ? '1' : '0'); } catch (e) { }
+		},
+
 		ToggleSound: function () {
 			if (!this.AudioPlayer || !this.AudioPlayer.Context)
 				return;
@@ -173,6 +193,9 @@ $(function () {
 		get frames() { return simbuinoPlayer.FramesRun; },
 		canvas: function () { return document.getElementById('canvas'); },
 		reset: function () { return simbuinoPlayer.Reset(); },
+		// used by the screenshot tool: grey areas otherwise land fully on or
+		// fully off depending which half of the dither the frame caught
+		setGray: function (on) { simbuinoPlayer.SetPersistence(on); },
 		// hold a button down for `frames` emulated frames, then release
 		press: function (name, frames) {
 			simbuinoPlayer.SetButton(name, true);

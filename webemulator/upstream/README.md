@@ -18,7 +18,7 @@ and only the substance matters:
 diff -u --strip-trailing-cr upstream/<file> ../js/<file>
 ```
 
-## The four changes
+## The four fixes
 
 ### `AtmelContext.js` — undefined `SREG`
 
@@ -74,7 +74,7 @@ already does:
 | `MULSU` operands | `(sbyte)Rd * (byte)Rr` | both sign-extended |
 | `ASR` result store | `R & 0xff` | stored unmasked, so negative |
 
-Comparing the two cores in full turned up nothing else worth porting:
+Comparing the two CPU cores in full turned up nothing else worth porting:
 
 - **Opcode coverage is equivalent.** The port groups instructions differently
   (`LD_X`/`LD_Y`/`LD_Z`, `BCLR`/`BSET` covering the `CLx`/`SEx` aliases) but
@@ -95,3 +95,26 @@ Comparing the two cores in full turned up nothing else worth porting:
   CMD16, CMD17, CMD23, CMD55, CMD58 and ACMD41. Neither implements CMD24
   (write) or CMD9/CMD10, which is why the SdFat-based sketches here cannot
   mount the card on either emulator.
+
+## Ported from the standalone: the grey blend
+
+This one is an addition, not a bug fix. `LcdDevice.cs` has an optional
+**Persistence** mode that simulates the LCD's response time: it integrates each
+pixel's state over the elapsed clock cycles, averages that against the previous
+frame, and buckets the result into three levels — `0`, `128`, `255`. Its own
+options dialog calls it "more suitable for games that employ double-buffered
+grayscale".
+
+The library draws `GRAY` as a checkerboard that inverts every frame —
+`Display.cpp` computes `g = y ^ frameCount` and lights a pixel when
+`(x ^ g) & 1` — so it is spatial *and* temporal dithering. On a one-bit panel
+that only resolves into a mid-tone once the response time is simulated;
+otherwise it shimmers in the player, and a screenshot catches whichever phase
+the frame happened to hold. 15 of the 119 entries use `GRAY`.
+
+`Lcd.js` had no equivalent — it copied pixel state straight to the canvas. The
+algorithm is ported verbatim, along with the three-level rendering it needs
+(the mid-tone is the midpoint of the foreground and the current backlight
+colour). `player.js` turns it **on** by default and offers a *Grey blend*
+toggle; upstream's standalone defaults it off. `?gray=0` disables it for a
+single link, and the choice is remembered per browser.

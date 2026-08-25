@@ -36,7 +36,8 @@ of the Nokia 5110 LCD, the buttons, the speaker and an SPI SD card. Upstream it
 ships as an ASP.NET MVC application whose only way to load a game is a file
 picker, so `webemulator/` is a standalone rebuild of it:
 
-- `webemulator/js/` — the emulator core, taken from upstream with four fixes:
+- `webemulator/js/` — the emulator core, taken from upstream with four fixes
+  and one feature ported from Simbuino's standalone C# emulator:
   - `AtmelContext.js` — `UpdateInterruptFlags()` tested a bare `SREG`, which is
     undefined in the port (everywhere else it writes `AtmelContext.SREG`). It
     threw a `ReferenceError` out of the frame loop, freezing any sketch that
@@ -55,6 +56,14 @@ picker, so `webemulator/` is a standalone rebuild of it:
   - `SdDevice.js` — reads a byte past the end of a card image as `0` instead of
     clocking `undefined` out over SPI, so a card image can be stored trimmed of
     its trailing empty space.
+  - `Lcd.js` — the **grey blend**, ported from the standalone's Persistence
+    option. The library draws `GRAY` as a checkerboard that inverts every
+    frame (`(x ^ y ^ frameCount) & 1`), so on a one-bit panel it only reads as
+    a mid-tone once the LCD's response time is simulated; otherwise it
+    shimmers, and a screenshot catches whichever phase the frame held. 15
+    entries use `GRAY`. It is **on** by default here (upstream defaults it
+    off); the player has a *Grey blend* toggle, `?gray=0` disables it for one
+    link, and the choice is remembered per browser.
 
   Simbuino ships two emulators that do **not** share code — a C# desktop
   application and this JavaScript port — and the port has drifted from the C#

@@ -8,17 +8,6 @@
 			this.Width = 84;
 			this.Height = 48;
 			this.Pixels = []
-			// Persistence simulates the LCD's response time. The library draws
-			// GRAY as a checkerboard that inverts every frame, so simulating the
-			// response time is what makes it read as a mid-tone rather than a
-			// shimmer. Ported from the standalone emulator's
-			// LcdDevice.cs, where it is an option too. player.js turns it on by
-			// default and exposes a toggle; upstream defaults it off.
-			this.Persistence = false;
-			this.Target = [];
-			this.Times = [];
-			this.Integrated = [];
-			this.LastIntegrated = [];
 			this.ImageChanged = [];
 			this.PropertyChanged = [];
 			this.LastRefresh = 0;
@@ -50,13 +39,7 @@
 			this.Pixels = [];
 			var num_pixels = this.Width * this.Height;
 			for (var i=0; i<num_pixels; i++)
-			{
 				this.Pixels[i] = 0;
-				this.Target[i] = 0;
-				this.Times[i] = 0;
-				this.Integrated[i] = 0;
-				this.LastIntegrated[i] = 0;
-			}
 			this.LastRefresh = 0;
 			this.LcdBackground = { R: 0x8f, G: 0xa7, B: 0x9a };
 			this.LcdForeground = { R: 0x40, G: 0x40, B: 0x40 };
@@ -76,15 +59,16 @@
 			this.CurrentY = 0;
 			this.ExtendedMode = false;
 			for (var i = 0; i < this.Pixels.length; i++)
-				this.Target[i] = 0;
+				this.Pixels[i] = 0;
 		},
 
 		SetPixel: function(x, y, color)
 		{
 			var ofs = y * this.Width + x;
-			this.Integrated[ofs] += this.Target[ofs] * (AtmelContext.Clock - this.Times[ofs]);
-			this.Times[ofs] = AtmelContext.Clock;
-			this.Target[ofs] = (color == 0) ? 0 : 255;
+			if (color == 0)
+				this.Pixels[y * this.Width + x] = 0;
+			else
+				this.Pixels[y * this.Width + x] = 255;
 		},
 
 		Refresh: function(force)
@@ -96,33 +80,6 @@
 				if (elapsed == 0)
 					return;
 			}
-			if (this.Persistence)
-			{
-				var n = this.Width * this.Height;
-				for (var i = 0; i < n; i++)
-				{
-					this.Integrated[i] += this.Target[i] * (AtmelContext.Clock - this.Times[i]);
-					this.Times[i] = AtmelContext.Clock;
-				}
-				for (var i = 0; i < n; i++)
-				{
-					if (elapsed != 0)
-						this.Integrated[i] = Math.floor(this.Integrated[i] / elapsed);
-					var average = (this.Integrated[i] + this.LastIntegrated[i]) / 2;
-					this.Pixels[i] = (average < 64) ? 0 : (average > 190) ? 255 : 128;
-				}
-				for (var i = 0; i < n; i++)
-				{
-					this.LastIntegrated[i] = this.Integrated[i];
-					this.Integrated[i] = 0;
-				}
-			}
-			else
-			{
-				for (var i = 0; i < this.Target.length; i++)
-					this.Pixels[i] = this.Target[i];
-			}
-
 			this.CalculateBacklight();
 			this.LastRefresh = AtmelContext.Clock;
 			this.CreateImage();
@@ -212,21 +169,9 @@
 			var src = 0;
 			var dst = 0;
 			var data = this.Image.data;
-			// with persistence on a pixel can also come back half-lit, which is
-			// how a GRAY area is meant to look
-			var midR = (foreR + backR) >> 1;
-			var midG = (foreG + backG) >> 1;
-			var midB = (foreB + backB) >> 1;
 			for (var i = 0; i < num_pixels; i++)
 			{
-				var p = pixels[src++];
-				if (p == 128)
-				{
-					data[dst++] = midR;
-					data[dst++] = midG;
-					data[dst++] = midB;
-				}
-				else if (p)
+				if (pixels[src++])
 				{
 					data[dst++] = foreR;
 					data[dst++] = foreG;
