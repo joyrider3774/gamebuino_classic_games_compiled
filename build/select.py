@@ -48,6 +48,10 @@ PREBUILT = {
     'DeathMaze': r'games\DeathMaze\DEATHMAZ.HEX',
     'Gamebuino-SuperSpaceShooter':
         r'games\Gamebuino-SuperSpaceShooter\dist\Debug\Arduino-Windows\superspaceshooter.hex',
+    # Our rebuild of discovery never leaves the library's title screen --
+    # pressing A does nothing and it sits there indefinitely, while the
+    # author's own binary goes straight into the game. Ship the author's.
+    'discovery': 'games/discovery/Discovery.ino.standard.hex',
     # A rebuild of sokobuino against the modern toolchain comes up with
     # corrupted game state -- current_gui_state lands on 4, which matches no
     # branch in its loop(), so it draws nothing. The author's own .hex runs

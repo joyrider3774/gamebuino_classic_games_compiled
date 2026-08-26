@@ -120,14 +120,14 @@ Every other folder in the archive is represented.
 
 ### Built from source, or binary only
 
-**122 entries are compiled from source here.** The other 35 ship a binary, and
+**121 entries are compiled from source here.** The other 36 ship a binary, and
 each card says which:
 
 - **29 are marked `binary only`** — the archive's `games_precompiled/` and
   `tools_precompiled/` categories. No source for these survives anywhere; the
   archive recovered a compiled `.HEX` and nothing else, so they cannot be
   rebuilt. The **Binary only** tab on the page filters to exactly these.
-- **6 are marked `prebuilt hex`** — source exists, but the author's own
+- **7 are marked `prebuilt hex`** — source exists, but the author's own
   binary is what runs here (see below).
 
 Most of the binary-only titles were recovered by decoding the `.HEX` files in a
@@ -139,10 +139,13 @@ Each entry was compiled with the Arduino IDE 1.8.19 AVR toolchain (avr-gcc 7.3)
 for `arduino:avr:uno` — the ATmega328 at 16 MHz — against Gamebuino Classic
 library 0.5.2.
 
-Six entries ship as a prebuilt `.hex` from their own author and are marked
+Seven entries ship as a prebuilt `.hex` from their own author and are marked
 `prebuilt hex` on the page. **DarkTower**, **DeathMaze**,
 **Gamebuino-SuperSpaceShooter** and **MAKERbuino-Etch-A-Sketch** sit in a
-source-bearing folder but kept only their build.
+source-bearing folder but kept only their build. **discovery** rebuilds
+cleanly, but the result never leaves the library's title screen — pressing A
+does nothing — while the author's `Discovery.ino.standard.hex` goes straight
+into the game, so that ships instead.
 **B-Rally** ships a Simbuino-specific build alongside its normal one, which is
 the one that runs here. **sokobuino** does rebuild cleanly, but the resulting
 binary misbehaves: `current_gui_state` ends up holding 4, which matches no
