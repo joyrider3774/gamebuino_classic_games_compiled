@@ -112,7 +112,12 @@ async function shoot(browser, game) {
 
     const shot = await page.evaluate(async (scale) => {
       const P = window.SimbuinoPlayer;
-      const blank = c => !c || c.lit < 0.02 || c.lit > 0.92;
+      // "sparse" means there is probably a better frame to be had; "empty"
+      // means there is genuinely nothing on screen. A few of these games draw
+      // very little on purpose -- LunarRun is one small lander sprite on an
+      // otherwise blank panel -- so sparse must not be treated as a failure.
+      const sparse = c => !c || c.lit < 0.02 || c.lit > 0.92;
+      const empty = c => !c || c.lit === 0 || c.lit >= 0.995;
 
       // Past the library's boot splash. gb.titleScreen() waits for A, and
       // plenty of these sit behind a menu, a difficulty select and a "get
@@ -133,19 +138,24 @@ async function shoot(browser, game) {
 
       // a wipe or a flashing screen can leave that frame empty; give it longer
       // and look again before deciding
-      for (let retry = 0; retry < 2 && blank(c); retry++) {
+      for (let retry = 0; retry < 2 && sparse(c); retry++) {
         await P.runFrames(SETTLE_FRAMES * 2);
         c = Object.assign({ tag: 'settled' }, window.__grab(scale));
       }
-      if (!blank(c)) return c;
+      if (!sparse(c)) return c;
 
       // The settled frame is what we want, but a few programs genuinely show
-      // nothing there -- a paint tool opens on an empty canvas, a snake starts
+      // little there -- a paint tool opens on an empty canvas, a snake starts
       // as one pixel. Rather than leave the card with no image, fall back to
-      // the richest frame actually seen, and to the title card last of all.
-      const alt = seen.filter(x => !blank(x)).sort((a, b) => b.edges - a.edges)[0];
+      // the richest frame actually seen, and to the title card after that.
+      const all = seen.concat([title, c]);
+      const alt = all.filter(x => !sparse(x)).sort((a, b) => b.edges - a.edges)[0];
       if (alt) return alt;
-      if (!blank(title)) return title;
+
+      // Nothing rich anywhere: keep the busiest frame that had anything on it
+      // at all, rather than discarding a game that simply draws very little.
+      const any = all.filter(x => !empty(x)).sort((a, b) => b.edges - a.edges)[0];
+      if (any) return any;
       return Object.assign({ blank: true }, c);
     }, SCALE);
 

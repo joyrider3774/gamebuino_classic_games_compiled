@@ -204,12 +204,7 @@ his ≈2,450, 117 distinct output levels against 118), where the stock 1-channel
 build managed a couple of hundred. The other three all gained sustained audio
 against a 1-channel control of the same sketch.
 
-### Known limitations
-
-**LunarRun** compiles cleanly but renders nothing under this emulator — three
-lit pixels and no more. The author's own `LUNARRUN.HEX`, which the archive also
-ships, behaves identically, so this is not the rebuild: it is the emulator or
-the game itself. It is the one entry with no preview image.
+### Known limitation
 
 **cruiser** — a portal-based 3D engine — renders correctly, but firing a shot
 with **A** crashes it. It dereferences a wild pointer while doing so
@@ -289,10 +284,20 @@ node shots.js --force
 
 Captured by running each build in the emulator under headless Chrome (Puppeteer,
 on the Node that ships with the Emscripten SDK). Each game runs past the
-library's boot splash, then A is pressed up to three times with the emulator
-running in between, and the frame with the most detail is kept — which is why
-some cards show a title screen and others show gameplay. The images are the raw
-84×48 framebuffer scaled 4× with nearest-neighbour.
+library's boot splash, then **A is pressed four times** with a pause after each,
+and the frame is taken once it has settled — which is why most cards show real
+gameplay rather than a title card. The images are the raw 84×48 framebuffer
+scaled 4× with nearest-neighbour.
+
+Where that frame turns out to be empty, the capture falls back to the richest
+frame it saw, and to the title card after that, rather than leaving a card with
+no image. "Empty" and "sparse" are deliberately different tests: some of these
+draw very little on purpose — LunarRun is a single small lander sprite on an
+otherwise blank panel — so a sparse frame is kept rather than discarded.
+
+Every entry has a screenshot. Two are captured differently and say so in the
+code: **cruiser** is captured without pressing A (see above), and the six
+SD-card games are captured with the card image mounted.
 
 ## Publishing to GitHub Pages
 
