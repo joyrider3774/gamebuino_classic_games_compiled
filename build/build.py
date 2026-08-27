@@ -254,6 +254,16 @@ def progmem_const(sk_dir, names=None):
             return (m.group(1) + 'const ' + m.group(2) + ' ' + m.group(3)
                     + m.group(4) + ' PROGMEM =' + tail)
 
+        # <type> PROGMEM name[] =  ->  const <type> PROGMEM name[] =
+        # (PROGMEM sitting between the type and the name, with or without a
+        # storage class in front of it)
+        m = re.match(r'^(\s*)((?:static\s+|volatile\s+)*)([\w\s]+?)\s+PROGMEM\s+(\w+)\s*(\[[^\]]*\])\s*$', head)
+        if m and not re.search(r'\bconst\b', head):
+            if want and m.group(4) not in want:
+                return line
+            return (m.group(1) + m.group(2) + 'const ' + m.group(3) + ' PROGMEM '
+                    + m.group(4) + m.group(5) + ' =' + tail)
+
         # const <type>* name[] PROGMEM =  ->  const <type>* const name[] PROGMEM =
         # (the elements are const, but the array itself has to be too)
         m = re.match(r'^(\s*)(.*\*)\s*(\w+)\s*(\[[^\]]*\])\s*PROGMEM\s*$', head)

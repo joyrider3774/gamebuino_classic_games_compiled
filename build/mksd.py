@@ -36,6 +36,12 @@ FILES = {
     # Thordar's Adventure is a binary-only recovery that still shipped
     # its data file alongside the .HEX
     'THORDAR.DAT': 'games_precompiled/ThordarsAdventure/THORDAR.DAT',
+    # LittleRacer reads its track geometry off the card
+    'CURVES.DAT': 'games_precompiled/LittleRacer/CURVES.DAT',
+    'HILLS.DAT': 'games_precompiled/LittleRacer/HILLS.DAT',
+    'LANES.DAT': 'games_precompiled/LittleRacer/LANES.DAT',
+    'STRAIGHT.DAT': 'games_precompiled/LittleRacer/STRAIGHT.DAT',
+    'TRACK.DAT': 'games_precompiled/LittleRacer/TRACK.DAT',
 }
 
 # a fixed timestamp keeps the image byte-identical across rebuilds

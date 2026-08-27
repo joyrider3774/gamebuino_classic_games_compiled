@@ -21,7 +21,7 @@ for the full licence notes.
 
 | Path | What it is |
 |---|---|
-| [`index.html`](index.html) | The collection page — 137 games, 20 tools |
+| [`index.html`](index.html) | The collection page — 159 games, 26 tools |
 | [`games/`](games/) | One compiled `.hex` per game |
 | [`tools/`](tools/) | One compiled `.hex` per non-game tool |
 | [`screenshots/`](screenshots/) | One 336×192 PNG per entry, captured from the emulator |
@@ -101,9 +101,9 @@ on-screen buttons appear instead.
 
 Source comes from
 [gamebuino_classic_source_codes](https://github.com/joyrider3774/gamebuino_classic_source_codes),
-which files its finds in four categories: `games/` (111) and `tools/` (17) hold
-entries with real source, and `games_precompiled/` (25) and `tools_precompiled/`
-(6) hold ones where only a compiled binary survives. That yields 157 entries
+which files its finds in four categories: `games/` (134) and `tools/` (23) hold
+entries with real source, and `games_precompiled/` (24) and `tools_precompiled/`
+(6) hold ones where only a compiled binary survives. That yields 185 entries
 here because:
 
 - `StijnCaerts-Gamebuino` holds **two** separate games (Pong and Snake), so it
@@ -120,16 +120,19 @@ Every other folder in the archive is represented.
 
 ### Built from source, or binary only
 
-**121 entries are compiled from source here.** The other 36 ship a binary, and
+**150 entries are compiled from source here.** The other 35 ship a binary, and
 each card says which:
 
-- **29 are marked `binary only`** — the archive's `games_precompiled/` and
+- **28 are marked `binary only`** — the archive's `games_precompiled/` and
   `tools_precompiled/` categories. No source for these survives anywhere; the
   archive recovered a compiled `.HEX` and nothing else, so they cannot be
   rebuilt. The page has a **Binary only** tab for exactly these, and a
-  **Source code** tab for the 128 entries whose source does survive.
+  **Source code** tab for the 157 entries whose source does survive.
 - **7 are marked `prebuilt hex`** — source exists, but the author's own
   binary is what runs here (see below).
+- **3 are marked `reconstructed dep`** — they compile from the author's own
+  source, but against a library that does not survive and had to be written
+  here (see below).
 
 Most of the binary-only titles were recovered by decoding the `.HEX` files in a
 fan-made SD-card compilation back to raw binary and reading the plaintext
@@ -158,8 +161,9 @@ instead.
 
 Nothing under the source archive was modified. The build stages a copy of each
 game folder and patches the copy. Every patch is a small, commented script in
-[`build/fixups/`](build/fixups/), one per game, applied at build time; the three
-libraries that had to be recovered are in [`build/libs/`](build/libs/). The
+[`build/fixups/`](build/fixups/), one per game, applied at build time; the
+libraries that had to be recovered are in [`build/libs/`](build/libs/), and
+target-local library variants in [`build/vendor/`](build/vendor/). The
 fixes fall into a handful of categories:
 
 - **Stray non-breaking spaces** — sketches pasted out of a web forum carry
@@ -208,7 +212,31 @@ his ≈2,450, 117 distinct output levels against 118), where the stock 1-channel
 build managed a couple of hundred. The other three all gained sustained audio
 against a 1-channel control of the same sketch.
 
+### Reconstructed dependencies
+
+Three MAKERbuino tools by **angyongen** build from his own source but against a
+library he never published, which does not survive in any of his 34
+repositories, in any branch or deleted commit of them, in this archive, or in
+the sibling Vircon32 project. Those libraries were written from scratch here,
+and the entries carry a **`reconstructed dep`** badge saying so — everything
+else on the page is either a faithful rebuild or the author's own binary, and
+that is a different claim.
+
+| Entry | Reconstructed | How much it matters |
+|---|---|---|
+| `makerbuino-frequency-generator` | `gamebuino_main_alt.h` | Little. The replacement is a shim onto the stock Gamebuino library, which supplies every symbol the sketch uses. |
+| `makerbuino-sd-explorer` | `gamebuino_main_alt.h`, plus his unbuffered `DISPLAYDIRECT` display mode | A lot. Without that mode the sketch overflows RAM by 60 bytes — which is exactly why he wrote it — so the drawing path here is not his. |
+| `makerbuino-midi` | `MidiSdFatBase.h`, the glue between his Midi2 library and SdFat | A lot. The MIDI file parsing is written here. |
+
+What *was* genuinely recovered, and is used as-is: **Sound4** and **Midi2**
+(both angyongen's, pinned to their 2020-05-18 commits — a later Midi2 commit
+adds a stray `break;` that stops note events consuming their data bytes, so the
+contemporaneous version is the correct one), **SdFat 1.1.4** (these sketches
+need the v1 API), and `gbTools.h`, which turned out to be sitting in
+sd-explorer's own repository under a name the Arduino IDE never compiles.
+
 ### Known limitation
+
 
 **cruiser** — a portal-based 3D engine — renders correctly, but firing a shot
 with **A** crashes it. It dereferences a wild pointer while doing so
@@ -219,7 +247,7 @@ emulator problem, and its screenshot is therefore taken without pressing A.
 
 ### The SD card
 
-Five entries read data files off the card, so the player mounts a shared
+Seven entries read data files off the card, so the player mounts a shared
 FAT16 image, [`webemulator/sdcard.img`](webemulator/sdcard.img), for them.
 It is built by [`build/mksd.py`](build/mksd.py) and holds:
 
@@ -231,6 +259,7 @@ It is built by [`build/mksd.py`](build/mksd.py) and holds:
 | `WOLF3D.DAT` | Wolfenduino | `games/Wolfenduino/` — its compressed level data |
 | `DF01.LDV` | Gamebookuino | `games/Gamebookuino/books+LDV/` — the book itself |
 | `THORDAR.DAT` | Thordar's Adventure | `games_precompiled/ThordarsAdventure/` |
+| `CURVES/HILLS/LANES/STRAIGHT/TRACK.DAT` | Little Racer | `games_precompiled/LittleRacer/` — its track geometry |
 
 Without their data these say so plainly rather than failing quietly:
 Wolfenduino draws "SD CARD MOUNT ERROR", Gamebookuino stops at its title
@@ -275,7 +304,7 @@ archive at `C:\github\gamebuino_classic_source_codes`:
 python discover.py      # find every sketch in the archive
 python select.py        # pick the primary sketch per folder
 python chanscan.py      # which sketches need more than one sound channel
-python build.py         # compile all 120 targets (8 in parallel)
+python build.py         # compile every target (8 in parallel)
 python meta.py          # join build results with the archive's README metadata
 python mksd.py          # build the shared SD card image
 python gen_index.py     # write index.html
@@ -299,9 +328,11 @@ no image. "Empty" and "sparse" are deliberately different tests: some of these
 draw very little on purpose — LunarRun is a single small lander sprite on an
 otherwise blank panel — so a sparse frame is kept rather than discarded.
 
-Every entry has a screenshot. Two are captured differently and say so in the
-code: **cruiser** is captured without pressing A (see above), and the six
-SD-card games are captured with the card image mounted.
+Every entry has a screenshot except **Clockuino**, which drives a DS3231
+real-time clock over I2C — Simbuino emulates neither, and the sketch sits in a
+`while(1)` waiting for it. Two entries are captured differently and say so in
+the code: **cruiser** is captured without pressing A (see above), and the seven
+SD-card entries are captured with the card image mounted.
 
 ## Publishing to GitHub Pages
 

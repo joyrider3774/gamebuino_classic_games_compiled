@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%274%27 fill=%27%23121716%27/%3E%3Crect x=%274%27 y=%278%27 width=%2724%27 height=%2714%27 fill=%27%23cedde7%27/%3E%3Crect x=%277%27 y=%2711%27 width=%274%27 height=%274%27 fill=%27%23404040%27/%3E%3Crect x=%2714%27 y=%2715%27 width=%274%27 height=%274%27 fill=%27%23404040%27/%3E%3Crect x=%2721%27 y=%2711%27 width=%274%27 height=%274%27 fill=%27%23404040%27/%3E%3C/svg%3E">
 <title>Gamebuino Classic Games</title>
-<meta name="description" content="137 Gamebuino Classic games and 20 tools, compiled from archived source and playable in the browser.">
+<meta name="description" content="159 Gamebuino Classic games and 26 tools, compiled from archived source and playable in the browser.">
 <style>
   :root {
     color-scheme: dark;
@@ -241,6 +241,13 @@
     color: #b6cdc5;
   }
 
+  /* a stronger note than the provenance flags: part of this build is not the
+     author's own code */
+  .badge.warn {
+    border-color: #7a6742;
+    color: #e0c48c;
+  }
+
   #empty { color: var(--muted); text-align: center; padding: 3em 0; }
   #empty[hidden] { display: none; }
 
@@ -322,7 +329,7 @@
      from that source and running here on Myndale&rsquo;s Simbuino HTML5 emulator.
      The console was an ATmega328 handheld with an 84&times;48 Nokia&nbsp;5110 screen,
      and its community wiki &mdash; along with most of what it linked to &mdash; is long gone from the live web.</p>
-  <p><strong>137</strong> games and <strong>20</strong> tools. Nothing here is my own work:
+  <p><strong>159</strong> games and <strong>26</strong> tools. Nothing here is my own work:
      every entry is someone else&rsquo;s game, credited below with its own licence.</p>
   <div class="links">
     <a href="https://github.com/joyrider3774/gamebuino_classic_source_codes" target="_blank" rel="noopener">The source archive</a>
@@ -338,10 +345,10 @@
 <div class="toolbar">
   <input type="search" id="search" placeholder="Search by name, author or description&hellip;" autocomplete="off">
   <button class="tab" type="button" data-kind="all" aria-pressed="true">All</button>
-  <button class="tab" type="button" data-kind="games" aria-pressed="false">Games (137)</button>
-  <button class="tab" type="button" data-kind="tools" aria-pressed="false">Tools (20)</button>
-  <button class="tab" type="button" data-source="source" aria-pressed="false">Source code (128)</button>
-  <button class="tab" type="button" data-source="binary" aria-pressed="false">Binary only (29)</button>
+  <button class="tab" type="button" data-kind="games" aria-pressed="false">Games (159)</button>
+  <button class="tab" type="button" data-kind="tools" aria-pressed="false">Tools (26)</button>
+  <button class="tab" type="button" data-source="source" aria-pressed="false">Source code (157)</button>
+  <button class="tab" type="button" data-source="binary" aria-pressed="false">Binary only (28)</button>
   <span class="count" id="count"></span>
 </div>
 
@@ -378,6 +385,16 @@
         </div>
       </div>
 
+      <div class="card" data-kind="games" data-source="source" data-search="advanced lawnmower simulator dekay (original version by duncan mcdonald)  advancedlawnmowersimulator">
+        <img class="shot" src="screenshots/AdvancedLawnmowerSimulator.png" alt="Advanced Lawnmower Simulator screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/AdvancedLawnmowerSimulator.hex&amp;title=Advanced+Lawnmower+Simulator" data-play>Advanced Lawnmower Simulator</a></h2>
+          <div class="by">by deKay (original version by Duncan McDonald)</div>
+          <div class="meta"><span class="badge" title="None specified">None specified</span><span>11.0 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/AdvancedLawnmowerSimulator.hex&amp;title=Advanced+Lawnmower+Simulator" data-play>&#9654; Play</a><a class="dl-button" href="games/AdvancedLawnmowerSimulator.hex" download="ADVANCED.HEX" title="Download ADVANCED.HEX &ndash; ready to copy onto a Gamebuino SD card">&#11015; .hex</a><a class="src-link" href="https://github.com/deKay01/AdvancedLawnmowerSimulator-Gamebuino" target="_blank" rel="noopener">Original repo</a></div>
+        </div>
+      </div>
+
       <div class="card" data-kind="games" data-source="source" data-search="agaruino ogbaba an agar.io-style clone agaruino">
         <img class="shot" src="screenshots/Agaruino.png" alt="Agaruino screenshot" loading="lazy" width="336" height="192">
         <div class="body">
@@ -397,6 +414,17 @@
           <p class="desc">&quot;Bsktuino&quot;, an aiming/basketball game; a real 2016 school project, &quot;ISN Project 2016, Lorgues&quot;, per its own README - explains the shared hosting</p>
           <div class="meta"><span class="badge" title="GPLv3">GPLv3</span><span>16.3 KB flash</span></div>
           <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/Aimbuino.hex&amp;title=Aimbuino" data-play>&#9654; Play</a><a class="dl-button" href="games/Aimbuino.hex" download="AIMBUINO.HEX" title="Download AIMBUINO.HEX &ndash; ready to copy onto a Gamebuino SD card">&#11015; .hex</a><a class="src-link" href="https://github.com/ogbaba/Aimbuino" target="_blank" rel="noopener">Original repo</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-source="source" data-search="alien invader belpaire a real space-invaders-style game alien-invader-belpaire">
+        <img class="shot" src="screenshots/Alien-Invader-Belpaire.png" alt="Alien Invader screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/Alien-Invader-Belpaire.hex&amp;title=Alien+Invader" data-play>Alien Invader</a></h2>
+          <div class="by">by Belpaire</div>
+          <p class="desc">A real Space-Invaders-style game</p>
+          <div class="meta"><span class="badge" title="None specified">None specified</span><span>15.5 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/Alien-Invader-Belpaire.hex&amp;title=Alien+Invader" data-play>&#9654; Play</a><a class="dl-button" href="games/Alien-Invader-Belpaire.hex" download="ALIENINV.HEX" title="Download ALIENINV.HEX &ndash; ready to copy onto a Gamebuino SD card">&#11015; .hex</a><a class="src-link" href="https://github.com/Belpaire/Alien-Invader" target="_blank" rel="noopener">Original repo</a></div>
         </div>
       </div>
 
@@ -593,6 +621,28 @@
         </div>
       </div>
 
+      <div class="card" data-kind="games" data-source="source" data-search="chuckie gamebuino tluyben a real chuckie egg clone chuckiegamebuino">
+        <img class="shot" src="screenshots/ChuckieGameBuino.png" alt="Chuckie GameBuino screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/ChuckieGameBuino.hex&amp;title=Chuckie+GameBuino" data-play>Chuckie GameBuino</a></h2>
+          <div class="by">by tluyben</div>
+          <p class="desc">A real Chuckie Egg clone</p>
+          <div class="meta"><span class="badge" title="None specified">None specified</span><span>11.4 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/ChuckieGameBuino.hex&amp;title=Chuckie+GameBuino" data-play>&#9654; Play</a><a class="dl-button" href="games/ChuckieGameBuino.hex" download="CHUCKIEG.HEX" title="Download CHUCKIEG.HEX &ndash; ready to copy onto a Gamebuino SD card">&#11015; .hex</a><a class="src-link" href="https://github.com/tluyben/ChuckieGameBuino" target="_blank" rel="noopener">Original repo</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="tools" data-source="source" data-search="clockuino xenoth a real-time-clock display app using a ds3231 rtc module clockuino">
+        <div class="noshot">no preview<br>available</div>
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../tools/Clockuino.hex&amp;title=Clockuino" data-play>Clockuino</a></h2>
+          <div class="by">by Xenoth</div>
+          <p class="desc">A real-time-clock display app using a DS3231 RTC module</p>
+          <div class="meta"><span class="badge" title="None specified">None specified</span><span>17.9 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../tools/Clockuino.hex&amp;title=Clockuino" data-play>&#9654; Play</a><a class="dl-button" href="tools/Clockuino.hex" download="CLOCKUIN.HEX" title="Download CLOCKUIN.HEX &ndash; ready to copy onto a Gamebuino SD card">&#11015; .hex</a><a class="src-link" href="https://github.com/Xenoth/Clockuino" target="_blank" rel="noopener">Original repo</a></div>
+        </div>
+      </div>
+
       <div class="card" data-kind="games" data-source="source" data-search="community rpg sorunome a genuinely substantial class-based rpg with real eeprom + sd-card save data gamebuino-community-rpg">
         <img class="shot" src="screenshots/gamebuino-community-rpg.png" alt="Community RPG screenshot" loading="lazy" width="336" height="192">
         <div class="body">
@@ -614,6 +664,17 @@
         </div>
       </div>
 
+      <div class="card" data-kind="games" data-source="source" data-search="cool pong dex999999999 &quot;coding pong&quot;, a real makerbuino-targeted pong variant cool-pong-dex999999999">
+        <img class="shot" src="screenshots/Cool-Pong-Dex999999999.png" alt="Cool Pong screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/Cool-Pong-Dex999999999.hex&amp;title=Cool+Pong" data-play>Cool Pong</a></h2>
+          <div class="by">by Dex999999999</div>
+          <p class="desc">&quot;Coding Pong&quot;, a real MAKERbuino-targeted Pong variant</p>
+          <div class="meta"><span class="badge" title="None specified">None specified</span><span>13.9 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/Cool-Pong-Dex999999999.hex&amp;title=Cool+Pong" data-play>&#9654; Play</a><a class="dl-button" href="games/Cool-Pong-Dex999999999.hex" download="COOLPONG.HEX" title="Download COOLPONG.HEX &ndash; ready to copy onto a Gamebuino SD card">&#11015; .hex</a><a class="src-link" href="https://github.com/Dex999999999/Cool-Pong" target="_blank" rel="noopener">Original repo</a></div>
+        </div>
+      </div>
+
       <div class="card" data-kind="games" data-source="source" data-search="copter clement83  copter">
         <img class="shot" src="screenshots/Copter.png" alt="Copter screenshot" loading="lazy" width="336" height="192">
         <div class="body">
@@ -621,6 +682,17 @@
           <div class="by">by Clement83</div>
           <div class="meta"><span class="badge" title="None specified">None specified</span><span>23.8 KB flash</span></div>
           <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/Copter.hex&amp;title=Copter" data-play>&#9654; Play</a><a class="dl-button" href="games/Copter.hex" download="COPTER.HEX" title="Download COPTER.HEX &ndash; ready to copy onto a Gamebuino SD card">&#11015; .hex</a><a class="src-link" href="https://github.com/Clement83/Copter" target="_blank" rel="noopener">Original repo</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-source="source" data-search="copter (by anny) annyfm (aneurin barker snook) **this recovers the &quot;copter&quot; title long tracked in this project&#x27;s own &quot;not found&quot; list as genuinely unrecoverable** gamebuino-copter">
+        <img class="shot" src="screenshots/Gamebuino-Copter.png" alt="Copter (by Anny) screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/Gamebuino-Copter.hex&amp;title=Copter+(by+Anny)" data-play>Copter (by Anny)</a></h2>
+          <div class="by">by annyfm (Aneurin Barker Snook)</div>
+          <p class="desc">**this recovers the &quot;copter&quot; title long tracked in this project&#x27;s own &quot;not found&quot; list as genuinely unrecoverable**</p>
+          <div class="meta"><span class="badge" title="None specified">None specified</span><span>13.6 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/Gamebuino-Copter.hex&amp;title=Copter+(by+Anny)" data-play>&#9654; Play</a><a class="dl-button" href="games/Gamebuino-Copter.hex" download="COPTERBY.HEX" title="Download COPTERBY.HEX &ndash; ready to copy onto a Gamebuino SD card">&#11015; .hex</a><a class="src-link" href="https://github.com/jac77794/Gamebuino-Copter" target="_blank" rel="noopener">Original repo</a></div>
         </div>
       </div>
 
@@ -798,6 +870,17 @@
         </div>
       </div>
 
+      <div class="card" data-kind="games" data-source="source" data-search="egg catcher temoli a real makerbuino-targeted catching game egg_catcher">
+        <img class="shot" src="screenshots/Egg_catcher.png" alt="Egg Catcher screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/Egg_catcher.hex&amp;title=Egg+Catcher" data-play>Egg Catcher</a></h2>
+          <div class="by">by Temoli</div>
+          <p class="desc">A real MAKERbuino-targeted catching game</p>
+          <div class="meta"><span class="badge" title="None specified">None specified</span><span>11.7 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/Egg_catcher.hex&amp;title=Egg+Catcher" data-play>&#9654; Play</a><a class="dl-button" href="games/Egg_catcher.hex" download="EGGCATCH.HEX" title="Download EGGCATCH.HEX &ndash; ready to copy onto a Gamebuino SD card">&#11015; .hex</a><a class="src-link" href="https://github.com/Temoli/Egg_catcher" target="_blank" rel="noopener">Original repo</a></div>
+        </div>
+      </div>
+
       <div class="card" data-kind="games" data-source="source" data-search="elventure wuuff a real, class-based zelda-like dungeon crawler elventure">
         <img class="shot" src="screenshots/Elventure.png" alt="Elventure screenshot" loading="lazy" width="336" height="192">
         <div class="body">
@@ -870,6 +953,17 @@
           <div class="by">by Vicking69</div>
           <div class="meta"><span class="badge" title="GPLv2">GPLv2</span><span>12.5 KB flash</span></div>
           <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/firemen.hex&amp;title=Firemen" data-play>&#9654; Play</a><a class="dl-button" href="games/firemen.hex" download="FIREMEN.HEX" title="Download FIREMEN.HEX &ndash; ready to copy onto a Gamebuino SD card">&#11015; .hex</a><a class="src-link" href="https://github.com/Vicking69/firemen" target="_blank" rel="noopener">Original repo</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-source="source" data-search="flabuino firstklaas a real flappy bird clone; same author already credited for games/discovery flabuino">
+        <img class="shot" src="screenshots/Flabuino.png" alt="Flabuino screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/Flabuino.hex&amp;title=Flabuino" data-play>Flabuino</a></h2>
+          <div class="by">by FirstKlaas</div>
+          <p class="desc">A real Flappy Bird clone; same author already credited for games/discovery</p>
+          <div class="meta"><span class="badge" title="None specified">None specified</span><span>8.8 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/Flabuino.hex&amp;title=Flabuino" data-play>&#9654; Play</a><a class="dl-button" href="games/Flabuino.hex" download="FLABUINO.HEX" title="Download FLABUINO.HEX &ndash; ready to copy onto a Gamebuino SD card">&#11015; .hex</a><a class="src-link" href="https://github.com/FirstKlaas/Flabuino" target="_blank" rel="noopener">Original repo</a></div>
         </div>
       </div>
 
@@ -1054,6 +1148,27 @@
         </div>
       </div>
 
+      <div class="card" data-kind="games" data-source="source" data-search="glenn olsson&#x27;s snake glennolsson a real linked-list-based snake, distinct from the other snake variants already archived glennolsson-snake">
+        <img class="shot" src="screenshots/GlennOlsson-Snake.png" alt="Glenn Olsson&#x27;s Snake screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/GlennOlsson-Snake.hex&amp;title=Glenn+Olsson&#x27;s+Snake" data-play>Glenn Olsson&#x27;s Snake</a></h2>
+          <div class="by">by GlennOlsson</div>
+          <p class="desc">A real linked-list-based Snake, distinct from the other Snake variants already archived</p>
+          <div class="meta"><span class="badge" title="None specified">None specified</span><span>12.4 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/GlennOlsson-Snake.hex&amp;title=Glenn+Olsson&#x27;s+Snake" data-play>&#9654; Play</a><a class="dl-button" href="games/GlennOlsson-Snake.hex" download="GLENNOLS.HEX" title="Download GLENNOLS.HEX &ndash; ready to copy onto a Gamebuino SD card">&#11015; .hex</a><a class="src-link" href="https://github.com/GlennOlsson/GameBuino" target="_blank" rel="noopener">Original repo</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="tools" data-source="source" data-search="gray experiment drakker  gray-experiment">
+        <img class="shot" src="screenshots/gray-experiment.png" alt="Gray Experiment screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../tools/gray-experiment.hex&amp;title=Gray+Experiment" data-play>Gray Experiment</a></h2>
+          <div class="by">by Drakker</div>
+          <div class="meta"><span class="badge" title="None specified">None specified</span><span>12.9 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../tools/gray-experiment.hex&amp;title=Gray+Experiment" data-play>&#9654; Play</a><a class="dl-button" href="tools/gray-experiment.hex" download="GRAYEXPE.HEX" title="Download GRAYEXPE.HEX &ndash; ready to copy onto a Gamebuino SD card">&#11015; .hex</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/tools/gray-experiment" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
       <div class="card" data-kind="games" data-source="source" data-search="gruniozerca arkadiusz kaminski (arhneu)  gruniozerca-gamebuino">
         <img class="shot" src="screenshots/gruniozerca-gamebuino.png" alt="Gruniozerca screenshot" loading="lazy" width="336" height="192">
         <div class="body">
@@ -1061,6 +1176,16 @@
           <div class="by">by Arkadiusz Kaminski (arhneu)</div>
           <div class="meta"><span class="badge" title="Unlicense">Unlicense</span><span>15.9 KB flash</span></div>
           <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/gruniozerca-gamebuino.hex&amp;title=Gruniozerca" data-play>&#9654; Play</a><a class="dl-button" href="games/gruniozerca-gamebuino.hex" download="GRUNIOZE.HEX" title="Download GRUNIOZE.HEX &ndash; ready to copy onto a Gamebuino SD card">&#11015; .hex</a><a class="src-link" href="https://github.com/arhneu/gruniozerca-gamebuino" target="_blank" rel="noopener">Original repo</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-source="source" data-search="guess a number l_et_m  guessanumber">
+        <img class="shot" src="screenshots/GuessANumber.png" alt="Guess A Number screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/GuessANumber.hex&amp;title=Guess+A+Number" data-play>Guess A Number</a></h2>
+          <div class="by">by l_et_m</div>
+          <div class="meta"><span class="badge" title="None specified">None specified</span><span>10.5 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/GuessANumber.hex&amp;title=Guess+A+Number" data-play>&#9654; Play</a><a class="dl-button" href="games/GuessANumber.hex" download="GUESSANU.HEX" title="Download GUESSANU.HEX &ndash; ready to copy onto a Gamebuino SD card">&#11015; .hex</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/games/GuessANumber" target="_blank" rel="noopener">Archived source</a></div>
         </div>
       </div>
 
@@ -1145,6 +1270,16 @@
         </div>
       </div>
 
+      <div class="card" data-kind="games" data-source="binary" data-search="little racer unknown  littleracer binary only precompiled">
+        <img class="shot" src="screenshots/LittleRacer.png" alt="Little Racer screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/LittleRacer.hex&amp;title=Little+Racer&amp;sd=sdcard.img" data-play>Little Racer</a></h2>
+          <div class="by">by Unknown</div>
+          <div class="meta"><span class="badge" title="None specified">None specified</span><span class="badge flag" title="No source for this one survives anywhere. The archive recovered a compiled binary only, so it cannot be rebuilt.">binary&nbsp;only</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/LittleRacer.hex&amp;title=Little+Racer&amp;sd=sdcard.img" data-play>&#9654; Play</a><a class="dl-button" href="games/LittleRacer.hex" download="LITTLERA.HEX" title="Download LITTLERA.HEX &ndash; ready to copy onto a Gamebuino SD card">&#11015; .hex</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/games_precompiled/LittleRacer" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
       <div class="card" data-kind="games" data-source="source" data-search="lunar run erico and myndale a lunar-lander game, genuinely distinct codebase from the already-archived games/yoda-lander lunarrun">
         <img class="shot" src="screenshots/LunarRun.png" alt="Lunar Run screenshot" loading="lazy" width="336" height="192">
         <div class="body">
@@ -1163,6 +1298,50 @@
           <div class="by">by Maciej Dobrzanski</div>
           <div class="meta"><span class="badge" title="None specified">None specified</span><span class="badge flag" title="No source for this one survives anywhere. The archive recovered a compiled binary only, so it cannot be rebuilt.">binary&nbsp;only</span></div>
           <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/MaciejDobrzanskiGame.hex&amp;title=Maciej+Dobrzanski&#x27;s+game" data-play>&#9654; Play</a><a class="dl-button" href="games/MaciejDobrzanskiGame.hex" download="MACIEJDO.HEX" title="Download MACIEJDO.HEX &ndash; ready to copy onto a Gamebuino SD card">&#11015; .hex</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/games_precompiled/MaciejDobrzanskiGame" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-source="source" data-search="makerbuino pong rokkos a real 2-player pong for makerbuino makerbuino-pong-rokkos">
+        <img class="shot" src="screenshots/makerbuino-pong-RokKos.png" alt="MAKERbuino Pong screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/makerbuino-pong-RokKos.hex&amp;title=MAKERbuino+Pong" data-play>MAKERbuino Pong</a></h2>
+          <div class="by">by RokKos</div>
+          <p class="desc">A real 2-player Pong for MAKERbuino</p>
+          <div class="meta"><span class="badge" title="MIT">MIT</span><span>12.2 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/makerbuino-pong-RokKos.hex&amp;title=MAKERbuino+Pong" data-play>&#9654; Play</a><a class="dl-button" href="games/makerbuino-pong-RokKos.hex" download="MAKERBUI.HEX" title="Download MAKERBUI.HEX &ndash; ready to copy onto a Gamebuino SD card">&#11015; .hex</a><a class="src-link" href="https://github.com/RokKos/makerbuino-pong-game" target="_blank" rel="noopener">Original repo</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="tools" data-source="source" data-search="makerbuino-frequency-generator angyongen a real on-device square-wave frequency generator makerbuino-frequency-generator reconstructed dependency">
+        <img class="shot" src="screenshots/makerbuino-frequency-generator.png" alt="makerbuino-frequency-generator screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../tools/makerbuino-frequency-generator.hex&amp;title=makerbuino-frequency-generator" data-play>makerbuino-frequency-generator</a></h2>
+          <div class="by">by angyongen</div>
+          <p class="desc">A real on-device square-wave frequency generator</p>
+          <div class="meta"><span class="badge" title="None specified">None specified</span><span>10.7 KB flash</span><span class="badge flag warn" title="Built against a reconstructed gamebuino_main_alt.h. The author never published that header; the version here is a shim onto the stock Gamebuino library, which supplies every symbol this sketch uses, so its behaviour should be unchanged.">reconstructed&nbsp;dep</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../tools/makerbuino-frequency-generator.hex&amp;title=makerbuino-frequency-generator" data-play>&#9654; Play</a><a class="dl-button" href="tools/makerbuino-frequency-generator.hex" download="MAKERBU2.HEX" title="Download MAKERBU2.HEX &ndash; ready to copy onto a Gamebuino SD card">&#11015; .hex</a><a class="src-link" href="https://github.com/angyongen/makerbuino-frequency-generator" target="_blank" rel="noopener">Original repo</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="tools" data-source="source" data-search="makerbuino-midi angyongen a real on-device sd-card midi player, needs the same author&#x27;s sound4 library as a dependency, matching this project&#x27;s own gb_fat precedent makerbuino-midi reconstructed dependency">
+        <img class="shot" src="screenshots/makerbuino-midi.png" alt="makerbuino-midi screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../tools/makerbuino-midi.hex&amp;title=makerbuino-midi" data-play>makerbuino-midi</a></h2>
+          <div class="by">by angyongen</div>
+          <p class="desc">A real on-device SD-card MIDI player, needs the same author&#x27;s Sound4 library as a dependency, matching this project&#x27;s own GB_Fat precedent</p>
+          <div class="meta"><span class="badge" title="None specified">None specified</span><span>17.8 KB flash</span><span class="badge flag warn" title="Built against a MidiSdFatBase.h written from scratch here - the glue between the author&#x27;s Midi2 library and SdFat, which he never published. The MIDI file parsing is therefore not the author&#x27;s.">reconstructed&nbsp;dep</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../tools/makerbuino-midi.hex&amp;title=makerbuino-midi" data-play>&#9654; Play</a><a class="dl-button" href="tools/makerbuino-midi.hex" download="MAKERBU3.HEX" title="Download MAKERBU3.HEX &ndash; ready to copy onto a Gamebuino SD card">&#11015; .hex</a><a class="src-link" href="https://github.com/angyongen/makerbuino-midi" target="_blank" rel="noopener">Original repo</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="tools" data-source="source" data-search="makerbuino-sd-explorer angyongen a real, substantial sd-card file browser/game loader makerbuino-sd-explorer reconstructed dependency">
+        <img class="shot" src="screenshots/makerbuino-sd-explorer.png" alt="makerbuino-sd-explorer screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../tools/makerbuino-sd-explorer.hex&amp;title=makerbuino-sd-explorer" data-play>makerbuino-sd-explorer</a></h2>
+          <div class="by">by angyongen</div>
+          <p class="desc">A real, substantial SD-card file browser/game loader</p>
+          <div class="meta"><span class="badge" title="None specified">None specified</span><span>21.0 KB flash</span><span class="badge flag warn" title="Built against two things written from scratch here: gamebuino_main_alt.h, and the author&#x27;s unbuffered DISPLAYDIRECT display mode, which this sketch needs to fit in RAM. Neither survives anywhere. The drawing code is therefore not the author&#x27;s.">reconstructed&nbsp;dep</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../tools/makerbuino-sd-explorer.hex&amp;title=makerbuino-sd-explorer" data-play>&#9654; Play</a><a class="dl-button" href="tools/makerbuino-sd-explorer.hex" download="MAKERBU4.HEX" title="Download MAKERBU4.HEX &ndash; ready to copy onto a Gamebuino SD card">&#11015; .hex</a><a class="src-link" href="https://github.com/angyongen/makerbuino-sd-explorer" target="_blank" rel="noopener">Original repo</a></div>
         </div>
       </div>
 
@@ -1313,13 +1492,14 @@
         </div>
       </div>
 
-      <div class="card" data-kind="games" data-source="binary" data-search="obsidian unknown  obsidian binary only precompiled">
+      <div class="card" data-kind="games" data-source="source" data-search="obsidian ishotjr a real space-shooter obsidian">
         <img class="shot" src="screenshots/Obsidian.png" alt="Obsidian screenshot" loading="lazy" width="336" height="192">
         <div class="body">
           <h2><a href="webemulator/player.html?hex=../games/Obsidian.hex&amp;title=Obsidian" data-play>Obsidian</a></h2>
-          <div class="by">by Unknown</div>
-          <div class="meta"><span class="badge" title="None specified">None specified</span><span class="badge flag" title="No source for this one survives anywhere. The archive recovered a compiled binary only, so it cannot be rebuilt.">binary&nbsp;only</span></div>
-          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/Obsidian.hex&amp;title=Obsidian" data-play>&#9654; Play</a><a class="dl-button" href="games/Obsidian.hex" download="OBSIDIAN.HEX" title="Download OBSIDIAN.HEX &ndash; ready to copy onto a Gamebuino SD card">&#11015; .hex</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/games_precompiled/Obsidian" target="_blank" rel="noopener">Archived source</a></div>
+          <div class="by">by ishotjr</div>
+          <p class="desc">A real space-shooter</p>
+          <div class="meta"><span class="badge" title="None specified">None specified</span><span>10.8 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/Obsidian.hex&amp;title=Obsidian" data-play>&#9654; Play</a><a class="dl-button" href="games/Obsidian.hex" download="OBSIDIAN.HEX" title="Download OBSIDIAN.HEX &ndash; ready to copy onto a Gamebuino SD card">&#11015; .hex</a><a class="src-link" href="https://github.com/ishotjr/Obsidian-Gamebuino" target="_blank" rel="noopener">Original repo</a></div>
         </div>
       </div>
 
@@ -1331,6 +1511,16 @@
           <p class="desc">The author&#x27;s own binary-only release repo, not a third-party copy</p>
           <div class="meta"><span class="badge" title="All rights reserved — &quot;NO WARRANTY&quot;">All rights reserved…</span><span class="badge flag" title="No source for this one survives anywhere. The archive recovered a compiled binary only, so it cannot be rebuilt.">binary&nbsp;only</span></div>
           <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/OperationFox.hex&amp;title=Operation+Fox" data-play>&#9654; Play</a><a class="dl-button" href="games/OperationFox.hex" download="OPERATIO.HEX" title="Download OPERATIO.HEX &ndash; ready to copy onto a Gamebuino SD card">&#11015; .hex</a><a class="src-link" href="https://github.com/jonneva/OpFoxDemo" target="_blank" rel="noopener">Original repo</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-source="source" data-search="pacman sot0  pacman-sot0">
+        <img class="shot" src="screenshots/Pacman-Sot0.png" alt="Pacman screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/Pacman-Sot0.hex&amp;title=Pacman" data-play>Pacman</a></h2>
+          <div class="by">by Sot0</div>
+          <div class="meta"><span class="badge" title="None specified">None specified</span><span>11.8 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/Pacman-Sot0.hex&amp;title=Pacman" data-play>&#9654; Play</a><a class="dl-button" href="games/Pacman-Sot0.hex" download="PACMAN.HEX" title="Download PACMAN.HEX &ndash; ready to copy onto a Gamebuino SD card">&#11015; .hex</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/games/Pacman-Sot0" target="_blank" rel="noopener">Archived source</a></div>
         </div>
       </div>
 
@@ -1362,6 +1552,17 @@
           <p class="desc">A Game &amp; Watch &quot;Parachute&quot; remake</p>
           <div class="meta"><span class="badge" title="None specified">None specified</span><span>13.5 KB flash</span></div>
           <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/Parachute_Gamebuino.hex&amp;title=Parachute" data-play>&#9654; Play</a><a class="dl-button" href="games/Parachute_Gamebuino.hex" download="PARACHUT.HEX" title="Download PARACHUT.HEX &ndash; ready to copy onto a Gamebuino SD card">&#11015; .hex</a><a class="src-link" href="https://github.com/jicehel/Parachute_Gamebuino" target="_blank" rel="noopener">Original repo</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-source="source" data-search="patricia pong sagischwarz a real, distinct pong variant patriciapong">
+        <img class="shot" src="screenshots/patriciapong.png" alt="Patricia Pong screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/patriciapong.hex&amp;title=Patricia+Pong" data-play>Patricia Pong</a></h2>
+          <div class="by">by sagischwarz</div>
+          <p class="desc">A real, distinct Pong variant</p>
+          <div class="meta"><span class="badge" title="None specified">None specified</span><span>12.2 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/patriciapong.hex&amp;title=Patricia+Pong" data-play>&#9654; Play</a><a class="dl-button" href="games/patriciapong.hex" download="PATRICIA.HEX" title="Download PATRICIA.HEX &ndash; ready to copy onto a Gamebuino SD card">&#11015; .hex</a><a class="src-link" href="https://github.com/sagischwarz/patriciapong" target="_blank" rel="noopener">Original repo</a></div>
         </div>
       </div>
 
@@ -1397,6 +1598,16 @@
         </div>
       </div>
 
+      <div class="card" data-kind="games" data-source="source" data-search="pixels on the line exocet + glafouk (&quot;just for fun&quot;)  pixelsontheline">
+        <img class="shot" src="screenshots/PixelsOnTheLine.png" alt="Pixels on the Line screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/PixelsOnTheLine.hex&amp;title=Pixels+on+the+Line" data-play>Pixels on the Line</a></h2>
+          <div class="by">by Exocet + Glafouk (&quot;Just for Fun&quot;)</div>
+          <div class="meta"><span class="badge" title="None specified">None specified</span><span>15.2 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/PixelsOnTheLine.hex&amp;title=Pixels+on+the+Line" data-play>&#9654; Play</a><a class="dl-button" href="games/PixelsOnTheLine.hex" download="PIXELSON.HEX" title="Download PIXELSON.HEX &ndash; ready to copy onto a Gamebuino SD card">&#11015; .hex</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/games/PixelsOnTheLine" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
       <div class="card" data-kind="games" data-source="binary" data-search="planet x microgames  planetx binary only precompiled">
         <img class="shot" src="screenshots/PlanetX.png" alt="Planet X screenshot" loading="lazy" width="336" height="192">
         <div class="body">
@@ -1415,6 +1626,17 @@
           <p class="desc">A Game &amp; Watch ROM player/converter</p>
           <div class="meta"><span class="badge" title="All rights reserved — &quot;you are not allowed to reuse the source at all&quot;">All rights reserved…</span><span class="badge flag" title="No source for this one survives anywhere. The archive recovered a compiled binary only, so it cannot be rebuilt.">binary&nbsp;only</span></div>
           <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../tools/PlayBuino.hex&amp;title=PlayBuino" data-play>&#9654; Play</a><a class="dl-button" href="tools/PlayBuino.hex" download="PLAYBUIN.HEX" title="Download PLAYBUIN.HEX &ndash; ready to copy onto a Gamebuino SD card">&#11015; .hex</a><a class="src-link" href="https://github.com/muessigb/PlayBuino" target="_blank" rel="noopener">Original repo</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-source="source" data-search="pong (temoli) temoli a real, distinct pong built from a makerbuino/circuitmess tutorial base pong-temoli">
+        <img class="shot" src="screenshots/Pong-Temoli.png" alt="Pong (Temoli) screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/Pong-Temoli.hex&amp;title=Pong+(Temoli)" data-play>Pong (Temoli)</a></h2>
+          <div class="by">by Temoli</div>
+          <p class="desc">A real, distinct Pong built from a MAKERbuino/CircuitMess tutorial base</p>
+          <div class="meta"><span class="badge" title="None specified">None specified</span><span>12.1 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/Pong-Temoli.hex&amp;title=Pong+(Temoli)" data-play>&#9654; Play</a><a class="dl-button" href="games/Pong-Temoli.hex" download="PONGTEMO.HEX" title="Download PONGTEMO.HEX &ndash; ready to copy onto a Gamebuino SD card">&#11015; .hex</a><a class="src-link" href="https://github.com/Temoli/Pong" target="_blank" rel="noopener">Original repo</a></div>
         </div>
       </div>
 
@@ -1536,6 +1758,17 @@
         </div>
       </div>
 
+      <div class="card" data-kind="games" data-source="source" data-search="sandtris timovski a real falling-sand tetris variant for makerbuino sandtris">
+        <img class="shot" src="screenshots/Sandtris.png" alt="Sandtris screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/Sandtris.hex&amp;title=Sandtris" data-play>Sandtris</a></h2>
+          <div class="by">by Timovski</div>
+          <p class="desc">A real falling-sand Tetris variant for MAKERbuino</p>
+          <div class="meta"><span class="badge" title="Public domain / Unlicense">Public domain / Unlicense</span><span>11.0 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/Sandtris.hex&amp;title=Sandtris" data-play>&#9654; Play</a><a class="dl-button" href="games/Sandtris.hex" download="SANDTRIS.HEX" title="Download SANDTRIS.HEX &ndash; ready to copy onto a Gamebuino SD card">&#11015; .hex</a><a class="src-link" href="https://github.com/Timovski/Sandtris" target="_blank" rel="noopener">Original repo</a></div>
+        </div>
+      </div>
+
       <div class="card" data-kind="games" data-source="source" data-search="save princesse clement83 a tiny knight-vs-monster teaching game saveprincesse">
         <img class="shot" src="screenshots/SavePrincesse.png" alt="Save Princesse screenshot" loading="lazy" width="336" height="192">
         <div class="body">
@@ -1618,6 +1851,27 @@
         </div>
       </div>
 
+      <div class="card" data-kind="games" data-source="source" data-search="siena town patryk kuciński (&quot;kuciniak&quot;) a real, author-credited 2019 game with eeprom save sienatown-gamebuino">
+        <img class="shot" src="screenshots/SienaTown-gamebuino.png" alt="Siena Town screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/SienaTown-gamebuino.hex&amp;title=Siena+Town" data-play>Siena Town</a></h2>
+          <div class="by">by Patryk Kuciński (&quot;Kuciniak&quot;)</div>
+          <p class="desc">A real, author-credited 2019 game with EEPROM save</p>
+          <div class="meta"><span class="badge" title="None specified">None specified</span><span>12.4 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/SienaTown-gamebuino.hex&amp;title=Siena+Town" data-play>&#9654; Play</a><a class="dl-button" href="games/SienaTown-gamebuino.hex" download="SIENATOW.HEX" title="Download SIENATOW.HEX &ndash; ready to copy onto a Gamebuino SD card">&#11015; .hex</a><a class="src-link" href="https://github.com/pKucinski/SienaTown-gamebuino" target="_blank" rel="noopener">Original repo</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="tools" data-source="source" data-search="sierpinski (makerbuino) paulgreg  sierpinski-makerbuino">
+        <img class="shot" src="screenshots/Sierpinski-makerbuino.png" alt="Sierpinski (MAKERbuino) screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../tools/Sierpinski-makerbuino.hex&amp;title=Sierpinski+(MAKERbuino)" data-play>Sierpinski (MAKERbuino)</a></h2>
+          <div class="by">by paulgreg</div>
+          <div class="meta"><span class="badge" title="None specified">None specified</span><span>11.1 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../tools/Sierpinski-makerbuino.hex&amp;title=Sierpinski+(MAKERbuino)" data-play>&#9654; Play</a><a class="dl-button" href="tools/Sierpinski-makerbuino.hex" download="SIERPINS.HEX" title="Download SIERPINS.HEX &ndash; ready to copy onto a Gamebuino SD card">&#11015; .hex</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/tools/Sierpinski-makerbuino" target="_blank" rel="noopener">Archived source</a></div>
+        </div>
+      </div>
+
       <div class="card" data-kind="games" data-source="source" data-search="simonbuino jerom (forklift5)  simonbuino">
         <img class="shot" src="screenshots/Simonbuino.png" alt="Simonbuino screenshot" loading="lazy" width="336" height="192">
         <div class="body">
@@ -1639,6 +1893,17 @@
         </div>
       </div>
 
+      <div class="card" data-kind="games" data-source="source" data-search="slice &amp; dice dex999999999 a substantial real ninja-themed game for makerbuino slice-and-dice">
+        <img class="shot" src="screenshots/Slice-and-Dice.png" alt="Slice &amp; Dice screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/Slice-and-Dice.hex&amp;title=Slice+&amp;+Dice" data-play>Slice &amp; Dice</a></h2>
+          <div class="by">by Dex999999999</div>
+          <p class="desc">A substantial real ninja-themed game for MAKERbuino</p>
+          <div class="meta"><span class="badge" title="None specified">None specified</span><span>20.8 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/Slice-and-Dice.hex&amp;title=Slice+&amp;+Dice" data-play>&#9654; Play</a><a class="dl-button" href="games/Slice-and-Dice.hex" download="SLICEDIC.HEX" title="Download SLICEDIC.HEX &ndash; ready to copy onto a Gamebuino SD card">&#11015; .hex</a><a class="src-link" href="https://github.com/Dex999999999/Slice-Dice" target="_blank" rel="noopener">Original repo</a></div>
+        </div>
+      </div>
+
       <div class="card" data-kind="games" data-source="source" data-search="smash-and-crash skyrunner65  smash-and-crash">
         <img class="shot" src="screenshots/Smash-and-Crash.png" alt="Smash-and-Crash screenshot" loading="lazy" width="336" height="192">
         <div class="body">
@@ -1646,6 +1911,17 @@
           <div class="by">by Skyrunner65</div>
           <div class="meta"><span class="badge" title="None specified">None specified</span><span>18.4 KB flash</span></div>
           <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/Smash-and-Crash.hex&amp;title=Smash-and-Crash" data-play>&#9654; Play</a><a class="dl-button" href="games/Smash-and-Crash.hex" download="SMASHAND.HEX" title="Download SMASHAND.HEX &ndash; ready to copy onto a Gamebuino SD card">&#11015; .hex</a><a class="src-link" href="https://github.com/Skyrunner65/Smash-and-Crash" target="_blank" rel="noopener">Original repo</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-source="source" data-search="snake (sigma-squared) sigma-squared a real, distinct snake codebase with its own logo art gamebuino-snake-sigma">
+        <img class="shot" src="screenshots/gamebuino-snake-sigma.png" alt="Snake (Sigma-Squared) screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/gamebuino-snake-sigma.hex&amp;title=Snake+(Sigma-Squared)" data-play>Snake (Sigma-Squared)</a></h2>
+          <div class="by">by Sigma-Squared</div>
+          <p class="desc">A real, distinct Snake codebase with its own logo art</p>
+          <div class="meta"><span class="badge" title="None specified">None specified</span><span>13.2 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/gamebuino-snake-sigma.hex&amp;title=Snake+(Sigma-Squared)" data-play>&#9654; Play</a><a class="dl-button" href="games/gamebuino-snake-sigma.hex" download="SNAKESIG.HEX" title="Download SNAKESIG.HEX &ndash; ready to copy onto a Gamebuino SD card">&#11015; .hex</a><a class="src-link" href="https://github.com/Sigma-Squared/gamebuino-snake" target="_blank" rel="noopener">Original repo</a></div>
         </div>
       </div>
 
@@ -1792,6 +2068,28 @@
         </div>
       </div>
 
+      <div class="card" data-kind="games" data-source="source" data-search="super crate buino: stone edition 4lar a real fan mod of the already-archived games/super-crate-buino, confirmed via direct diff to add a real map-selector menu and cheat weapon, not a duplicate super-crate-buino-stoneedition">
+        <img class="shot" src="screenshots/Super-Crate-Buino-StoneEdition.png" alt="Super Crate Buino: Stone Edition screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/Super-Crate-Buino-StoneEdition.hex&amp;title=Super+Crate+Buino:+Stone+Edition" data-play>Super Crate Buino: Stone Edition</a></h2>
+          <div class="by">by 4LAR</div>
+          <p class="desc">A real fan mod of the already-archived games/Super-Crate-Buino, confirmed via direct diff to add a real map-selector menu and cheat weapon, not a duplicate</p>
+          <div class="meta"><span class="badge" title="None specified">None specified</span><span>27.7 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/Super-Crate-Buino-StoneEdition.hex&amp;title=Super+Crate+Buino:+Stone+Edition" data-play>&#9654; Play</a><a class="dl-button" href="games/Super-Crate-Buino-StoneEdition.hex" download="SUPERCR2.HEX" title="Download SUPERCR2.HEX &ndash; ready to copy onto a Gamebuino SD card">&#11015; .hex</a><a class="src-link" href="https://github.com/4LAR/-GAMEBUINO-Super-Crate-Buino-Stone-Edition-" target="_blank" rel="noopener">Original repo</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-source="source" data-search="super crate buino: stone mod 4lar a second, separate fan mod by the same author as stone edition above, genuinely different from both it and the original super-crate-buino-stonemod">
+        <img class="shot" src="screenshots/Super-Crate-Buino-StoneMod.png" alt="Super Crate Buino: Stone Mod screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/Super-Crate-Buino-StoneMod.hex&amp;title=Super+Crate+Buino:+Stone+Mod" data-play>Super Crate Buino: Stone Mod</a></h2>
+          <div class="by">by 4LAR</div>
+          <p class="desc">A second, separate fan mod by the same author as Stone Edition above, genuinely different from both it and the original</p>
+          <div class="meta"><span class="badge" title="None specified">None specified</span><span>26.2 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/Super-Crate-Buino-StoneMod.hex&amp;title=Super+Crate+Buino:+Stone+Mod" data-play>&#9654; Play</a><a class="dl-button" href="games/Super-Crate-Buino-StoneMod.hex" download="SUPERCR3.HEX" title="Download SUPERCR3.HEX &ndash; ready to copy onto a Gamebuino SD card">&#11015; .hex</a><a class="src-link" href="https://github.com/4LAR/-GAMEBUINO-Super-Crate-Buino-Stone-Mod-" target="_blank" rel="noopener">Original repo</a></div>
+        </div>
+      </div>
+
       <div class="card" data-kind="games" data-source="source" data-search="super space shooter msevilgenius  gamebuino-superspaceshooter">
         <img class="shot" src="screenshots/Gamebuino-SuperSpaceShooter.png" alt="Super Space Shooter screenshot" loading="lazy" width="336" height="192">
         <div class="body">
@@ -1809,6 +2107,17 @@
           <div class="by">by Awot83</div>
           <div class="meta"><span class="badge" title="GPLv3">GPLv3</span><span>16.5 KB flash</span></div>
           <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/Gamebuino-TREX-QUEST.hex&amp;title=T-Rex+Quest" data-play>&#9654; Play</a><a class="dl-button" href="games/Gamebuino-TREX-QUEST.hex" download="TREXQUES.HEX" title="Download TREXQUES.HEX &ndash; ready to copy onto a Gamebuino SD card">&#11015; .hex</a><a class="src-link" href="https://github.com/Awot83/Gamebuino-TREX-QUEST" target="_blank" rel="noopener">Original repo</a></div>
+        </div>
+      </div>
+
+      <div class="card" data-kind="games" data-source="source" data-search="tap tap temoli a real brick-tapping reflex game built from a gamebuino.com academy tutorial base tap_tap-temoli">
+        <img class="shot" src="screenshots/Tap_tap-Temoli.png" alt="Tap Tap screenshot" loading="lazy" width="336" height="192">
+        <div class="body">
+          <h2><a href="webemulator/player.html?hex=../games/Tap_tap-Temoli.hex&amp;title=Tap+Tap" data-play>Tap Tap</a></h2>
+          <div class="by">by Temoli</div>
+          <p class="desc">A real brick-tapping reflex game built from a gamebuino.com academy tutorial base</p>
+          <div class="meta"><span class="badge" title="None specified">None specified</span><span>10.5 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/Tap_tap-Temoli.hex&amp;title=Tap+Tap" data-play>&#9654; Play</a><a class="dl-button" href="games/Tap_tap-Temoli.hex" download="TAPTAP.HEX" title="Download TAPTAP.HEX &ndash; ready to copy onto a Gamebuino SD card">&#11015; .hex</a><a class="src-link" href="https://github.com/Temoli/Tap_tap" target="_blank" rel="noopener">Original repo</a></div>
         </div>
       </div>
 
@@ -1905,13 +2214,14 @@
         </div>
       </div>
 
-      <div class="card" data-kind="games" data-source="binary" data-search="well mown! unknown  wellmown binary only precompiled">
-        <img class="shot" src="screenshots/WellMown.png" alt="Well Mown! screenshot" loading="lazy" width="336" height="192">
+      <div class="card" data-kind="games" data-source="source" data-search="walbloks borkin8r a real block-stacking game for makerbuino walbloks">
+        <img class="shot" src="screenshots/walbloks.png" alt="Walbloks screenshot" loading="lazy" width="336" height="192">
         <div class="body">
-          <h2><a href="webemulator/player.html?hex=../games/WellMown.hex&amp;title=Well+Mown!" data-play>Well Mown!</a></h2>
-          <div class="by">by Unknown</div>
-          <div class="meta"><span class="badge" title="None specified">None specified</span><span class="badge flag" title="No source for this one survives anywhere. The archive recovered a compiled binary only, so it cannot be rebuilt.">binary&nbsp;only</span></div>
-          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/WellMown.hex&amp;title=Well+Mown!" data-play>&#9654; Play</a><a class="dl-button" href="games/WellMown.hex" download="WELLMOWN.HEX" title="Download WELLMOWN.HEX &ndash; ready to copy onto a Gamebuino SD card">&#11015; .hex</a><a class="src-link" href="https://github.com/joyrider3774/gamebuino_classic_source_codes/tree/main/games_precompiled/WellMown" target="_blank" rel="noopener">Archived source</a></div>
+          <h2><a href="webemulator/player.html?hex=../games/walbloks.hex&amp;title=Walbloks" data-play>Walbloks</a></h2>
+          <div class="by">by borkin8r</div>
+          <p class="desc">A real block-stacking game for MAKERbuino</p>
+          <div class="meta"><span class="badge" title="None specified">None specified</span><span>10.5 KB flash</span></div>
+          <div class="actions"><a class="play-button" href="webemulator/player.html?hex=../games/walbloks.hex&amp;title=Walbloks" data-play>&#9654; Play</a><a class="dl-button" href="games/walbloks.hex" download="WALBLOKS.HEX" title="Download WALBLOKS.HEX &ndash; ready to copy onto a Gamebuino SD card">&#11015; .hex</a><a class="src-link" href="https://github.com/borkin8r/walbloks" target="_blank" rel="noopener">Original repo</a></div>
         </div>
       </div>
 

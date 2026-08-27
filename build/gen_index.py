@@ -7,7 +7,7 @@ SITE = os.environ.get("GB_SITE", r"C:\github\gamebuino_classic_games_compiled")
 # entries that read a data file off the SD card, so the player mounts the
 # shared card image for them (see mksd.py for what is on it)
 NEEDS_SD = {'B-Rally', 'gamebuino-community-rpg', 'sd_map_test', 'Wolfenduino', 'Gamebookuino',
-             'ThordarsAdventure'}
+             'ThordarsAdventure', 'LittleRacer'}
 
 CSS = """
   :root {
@@ -244,6 +244,13 @@ CSS = """
     color: #b6cdc5;
   }
 
+  /* a stronger note than the provenance flags: part of this build is not the
+     author's own code */
+  .badge.warn {
+    border-color: #7a6742;
+    color: #e0c48c;
+  }
+
   #empty { color: var(--muted); text-align: center; padding: 3em 0; }
   #empty[hidden] { display: none; }
 
@@ -436,7 +443,8 @@ def card_html(e):
         e['top'],
         'binary' if e.get('precompiled') else 'source',
         html.escape((e['title'] + ' ' + e['author'] + ' ' + e['desc'] + ' ' + e['slug']
-                     + (' binary only precompiled' if e.get('precompiled') else '')).lower())),
+                     + (' binary only precompiled' if e.get('precompiled') else '')
+                     + (' reconstructed dependency' if e.get('reconstructed') else '')).lower())),
         '  ' + art,
         '  <div class="body">',
         '    <h2><a href="%s" data-play>%s</a></h2>' % (play, title)]
@@ -453,6 +461,9 @@ def card_html(e):
         meta.append('<span class="badge" title="%s">%s</span>' % (html.escape(lic), html.escape(short)))
     if e['flash']:
         meta.append('<span>%s KB flash</span>' % round(e['flash']['bytes'] / 1024, 1))
+    if e.get('reconstructed'):
+        meta.append('<span class="badge flag warn" title="%s">reconstructed&nbsp;dep</span>'
+                    % html.escape(e['reconstructed']))
     if e.get('precompiled'):
         meta.append('<span class="badge flag" title="No source for this one survives anywhere. '
                     'The archive recovered a compiled binary only, so it cannot be rebuilt.">'

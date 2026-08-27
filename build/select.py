@@ -40,6 +40,9 @@ MANUAL = [
     # a plain Arduino sketch that ships as hello.cpp for a CMake build
     {'top': 'tools', 'entry': 'HelloGamebuino', 'slug': 'HelloGamebuino',
      'sketch_rel': r'tools\HelloGamebuino', 'main': 'HelloGamebuino.ino'},
+    # likewise, but the file is chuckie.c
+    {'top': 'games', 'entry': 'ChuckieGameBuino', 'slug': 'ChuckieGameBuino',
+     'sketch_rel': r'games\ChuckieGameBuino', 'main': 'ChuckieGameBuino.ino'},
 ]
 
 # entries shipped only as a prebuilt .hex (path relative to the archive root)
@@ -48,6 +51,9 @@ PREBUILT = {
     'DeathMaze': r'games\DeathMaze\DEATHMAZ.HEX',
     'Gamebuino-SuperSpaceShooter':
         r'games\Gamebuino-SuperSpaceShooter\dist\Debug\Arduino-Windows\superspaceshooter.hex',
+    # LittleRacer is an unreleased prototype recovered as four sequential 2016
+    # dev builds. RPROTO6 is the last of them.
+    'LittleRacer': 'games_precompiled/LittleRacer/RPROTO6.hex',
     # Our rebuild of discovery never leaves the library's title screen --
     # pressing A does nothing and it sits there indefinitely, while the
     # author's own binary goes straight into the game. Ship the author's.

@@ -14,6 +14,28 @@ ROW = re.compile(r'^\|\s*(.+?)\s*\|\s*(.+?)\s*\|\s*(.+?)\s*\|\s*(.+?)\s*\|\s*$')
 LINK = re.compile(r'\[((?:games|tools)(?:_precompiled)?/[^\]]+)\]\(([^)]+)\)\s*(?:\((.*)\))?\s*$')
 
 
+# Entries whose build depends on a library that does not survive anywhere and
+# was written from scratch here. Everything else on the page is either a
+# faithful rebuild or the author's own binary, so the difference is worth
+# saying on the card rather than burying in a README.
+RECONSTRUCTED = {
+    'makerbuino-frequency-generator':
+        "Built against a reconstructed gamebuino_main_alt.h. The author never "
+        "published that header; the version here is a shim onto the stock "
+        "Gamebuino library, which supplies every symbol this sketch uses, so "
+        "its behaviour should be unchanged.",
+    'makerbuino-sd-explorer':
+        "Built against two things written from scratch here: "
+        "gamebuino_main_alt.h, and the author's unbuffered DISPLAYDIRECT "
+        "display mode, which this sketch needs to fit in RAM. Neither survives "
+        "anywhere. The drawing code is therefore not the author's.",
+    'makerbuino-midi':
+        "Built against a MidiSdFatBase.h written from scratch here - the glue "
+        "between the author's Midi2 library and SdFat, which he never "
+        "published. The MIDI file parsing is therefore not the author's.",
+}
+
+
 def submodule_paths():
     """Folders the archive stores as a submodule rather than as real files.
 
@@ -132,6 +154,7 @@ def main():
             # no source for this one exists anywhere; the archive recovered a
             # compiled binary only
             'precompiled': bool(t.get('precompiled')),
+            'reconstructed': RECONSTRUCTED.get(t['slug']),
             'flash': flash,
             'submodule': is_submodule,
             # only entries the archive really holds get an archive link
@@ -152,6 +175,8 @@ def main():
     subs = [e for e in entries if e['submodule']]
     print('submodules (upstream link only):', len(subs),
           '| really archived here:', len(entries) - len(subs))
+    print('built against a reconstructed dependency:',
+          [e['slug'] for e in entries if e.get('reconstructed')])
     print('binary-only recoveries:', sum(1 for e in entries if e['precompiled']),
           '| built from source:', sum(1 for e in entries
                                       if not e['precompiled'] and not e['prebuilt']))
