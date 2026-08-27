@@ -18,7 +18,7 @@ and only the substance matters:
 diff -u --strip-trailing-cr upstream/<file> ../js/<file>
 ```
 
-## The four fixes
+## The fixes
 
 ### `AtmelContext.js` — undefined `SREG`
 
@@ -51,12 +51,48 @@ sign-extended both operands, so the product was wrong whenever `Rr >= 128`.
 avr-gcc emits `MULSU` inside its 16×16 signed multiply helpers, so this
 affected any sketch doing fixed-point arithmetic.
 
-### `SdDevice.js` — reads past the end of a card image
+### `SdDevice.js` — the card model
 
-Indexing past the end of a `Uint8Array` yields `undefined` rather than
-throwing, so upstream's `catch` never fired and `undefined` was clocked out
-over SPI a byte at a time. Returning `0` instead lets a card image be stored
-trimmed of its trailing empty space (16 MB → 1.5 MB here).
+Four separate things, all in the SD card emulation. Together they are what
+makes the SdFat-based sketches work; before them, every one of them failed at
+`SD.begin()`.
+
+**No Ncr fill byte before the response.** A real card sends 1–8 fill bytes
+before its R1, and SdFat leans on that: `cardCommand()` does
+
+```c
+// discard first fill byte to avoid MISO pull-up problem.
+spiReceive();
+for (uint8_t i = 0; ((m_status = spiReceive()) & 0X80) && i < 10; i++) {}
+```
+
+The emulated card answered on the very first byte, so SdFat threw the response
+away and read the *next* byte as R1. That is the whole reason SdFat could not
+mount the card — not missing commands, as it first appeared: the trace showed
+the card returning a perfectly correct `01` to CMD0 and SdFat rejecting it. One
+`0xff` before each R1 fixes every command at once. Petit FatFs and GB_Fat do
+not discard that byte, which is why they always worked.
+
+**No CMD18 / CMD12.** SdFat prefers READ_MULTIPLE_BLOCK for runs of blocks and
+stops it with STOP_TRANSMISSION. Blocks now stream until the host stops them,
+and the next block is only queued when the host is clocking idle bytes — so a
+CMD12 landing on a block boundary is still parsed as a command.
+
+**No writes.** `chip-8-gamebuino` pages the CHIP-8 4 KB address space through
+`CHIPMEM?.DAT` files on the card — `memory_swap()` writes the outgoing
+156-byte page back before reading the next one in — so a read-only card cannot
+run a ROM at all: the write-back fails, the read-in fails with it, and the
+interpreter executes whatever was left in RAM. CMD24, CMD25, CMD13 and ACMD23
+are implemented, with a receive state machine for the data token, the 512 data
+bytes and the CRC pair. **Writes land in the card image held in memory and are
+not persisted anywhere**, which is all the paging needs: it only has to survive
+the session. The buffer grows on demand, since a card image is stored trimmed
+of its empty tail but the volume it describes is much larger.
+
+**Reads past the end of a card image.** Indexing past the end of a
+`Uint8Array` yields `undefined` rather than throwing, so upstream's `catch`
+never fired and `undefined` was clocked out over SPI a byte at a time.
+Returning `0` instead lets the image be stored trimmed (16 MB → 1.9 MB here).
 
 ## Where these came from
 
@@ -91,10 +127,11 @@ Comparing the two CPU cores in full turned up nothing else worth porting:
 - **Status flags agree.** The port precomputes `FlagsAdd[]`/`FlagsSub[]` lookup
   tables that the C# does not have, which makes the arithmetic instructions
   look at a glance as though they skip flag updates.
-- **SD card command coverage is identical** — both handle only CMD0, CMD8,
-  CMD16, CMD17, CMD23, CMD55, CMD58 and ACMD41. Neither implements CMD24
-  (write) or CMD9/CMD10, which is why the SdFat-based sketches here cannot
-  mount the card on either emulator.
+- **SD card command coverage was identical** — both handled only CMD0, CMD8,
+  CMD16, CMD17, CMD23, CMD55, CMD58 and ACMD41, and both answered without the
+  Ncr fill byte, so SdFat sketches failed to mount on either emulator. All four
+  card fixes above therefore apply to the C# side too, and have been made there
+  as well: <https://github.com/joyrider3774/Simbuino>.
 
 ## Ported from the standalone: the grey blend
 

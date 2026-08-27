@@ -42,6 +42,85 @@ FILES = {
     'LANES.DAT': 'games_precompiled/LittleRacer/LANES.DAT',
     'STRAIGHT.DAT': 'games_precompiled/LittleRacer/STRAIGHT.DAT',
     'TRACK.DAT': 'games_precompiled/LittleRacer/TRACK.DAT',
+    # Operation Fox's episode data, shipped beside its .HEX; its README says to
+    # copy both to the card
+    'EP1.DAT': 'games_precompiled/OperationFox/EP1.DAT',
+    # PlayBuino plays converted audio from the card; this is the sample its
+    # author shipped with the player
+    'MEDIA.WAV': 'tools_precompiled/PlayBuino/Gamebuino/MEDIA.WAV',
+}
+
+# CHIP-8 programs, kept in the repo rather than in the source archive: they are
+# not Gamebuino software, they are what tools/chip-8-gamebuino interprets. The
+# sketch offers any root file whose name ends in "8" as a ROM. Provenance and
+# authorship: build/chip8roms/README.md.
+ROMS = ['BRIX.CH8', 'INVADERS.CH8', 'BLITZ.CH8', 'PONG1.CH8', 'TETRIS.CH8']
+ROM_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'chip8roms')
+
+
+def make_scale_mid():
+    """A minimal Standard MIDI File: one octave up and back, quarter notes.
+
+    makerbuino-midi scans the card root for *.MID and there is no MIDI file
+    anywhere in the source archive, so this is written here rather than
+    imported from anyone -- it exists purely so the player has something to
+    play. Format 0, one track, 96 ticks per quarter note, explicit note-on and
+    note-off (no running status), which is the subset the player reads.
+    """
+    import struct
+
+    notes = [60, 62, 64, 65, 67, 69, 71, 72, 71, 69, 67, 65, 64, 62, 60]
+    ev = bytearray()
+    for n in notes:
+        ev += b'\x00' + bytes((0x90, n, 0x50))     # note on,  delta 0
+        ev += b'\x60' + bytes((0x80, n, 0x40))     # note off, delta 96
+    ev += b'\x00\xff\x2f\x00'                     # end of track
+
+    hdr = b'MThd' + struct.pack('>IHHH', 6, 0, 1, 96)
+    trk = b'MTrk' + struct.pack('>I', len(ev)) + bytes(ev)
+    return hdr + trk
+
+
+def make_demo_ch8():
+    """A minimal CHIP-8 program: a sprite tracking across the screen.
+
+    chip-8-gamebuino lists the card root and offers any file whose name ends in
+    "8" as a ROM. No CHIP-8 program exists in the source archive and the
+    circulating classics have murky provenance, so this is written here: it is
+    a demo, not one of the well-known games.
+
+    Assembly, loaded at 0x200 as CHIP-8 programs are:
+
+        200  00E0     clear the screen
+        202  6000     V0 = 0            x
+        204  610C     V1 = 12           y
+        206  A220     I  = sprite
+        208  D015     draw 5-byte sprite at (V0,V1)   -- XOR, so this shows it
+        20A  6208     V2 = 8
+        20C  F215     delay timer = V2
+        20E  F307     V3 = delay timer
+        210  3300     skip the next instruction if V3 == 0
+        212  120E     ...otherwise keep waiting
+        214  D015     draw again at the same spot     -- XOR, so this erases it
+        216  7002     V0 += 2
+        218  1208     back to the draw
+        220  sprite   a 4x5 open box
+    """
+    code = bytes([
+        0x00, 0xE0,  0x60, 0x00,  0x61, 0x0C,  0xA2, 0x20,
+        0xD0, 0x15,  0x62, 0x08,  0xF2, 0x15,  0xF3, 0x07,
+        0x33, 0x00,  0x12, 0x0E,  0xD0, 0x15,  0x70, 0x02,
+        0x12, 0x08,
+    ])
+    code += bytes(0x20 - len(code))              # pad up to offset 0x20
+    code += bytes([0xF0, 0x90, 0x90, 0x90, 0xF0])  # the sprite
+    return code
+
+
+# files written here rather than taken from the archive, 8.3 name -> builder
+GENERATED = {
+    'SCALE.MID': make_scale_mid,
+    'DEMO.CH8': make_demo_ch8,
 }
 
 # a fixed timestamp keeps the image byte-identical across rebuilds
@@ -226,6 +305,18 @@ def main():
         start, n = fs.write_file(name, payload)
         print('  + %-12s %7d bytes -> %d cluster(s) from %d' % (name, len(payload), n, start))
 
+    for name in ROMS:
+        payload = open(os.path.join(ROM_DIR, name), 'rb').read()
+        start, n = fs.write_file(name, payload)
+        print('  + %-12s %7d bytes -> %d cluster(s) from %d  (CHIP-8 ROM)'
+              % (name, len(payload), n, start))
+
+    for name, build in GENERATED.items():
+        payload = build()
+        start, n = fs.write_file(name, payload)
+        print('  + %-12s %7d bytes -> %d cluster(s) from %d  (generated here)'
+              % (name, len(payload), n, start))
+
     open(IMAGE, 'wb').write(wrap(bytes(fs.d)))
 
     # read it straight back and check everything round-trips
@@ -253,6 +344,17 @@ def main():
         got = b''.join(v.d[v.cluster_offset(c):v.cluster_offset(c) + v.csize]
                        for c in chain)[:size]
         full = stem + ('.' + ext if ext else '')
+        if full in GENERATED:
+            good = got == GENERATED[full]()
+            note = 'matches generator' if good else 'MISMATCH'
+            ok &= good
+            print('  %-12s %8d bytes  %3d clusters  %s' % (full, size, len(chain), note))
+            continue
+        if full in ROMS:
+            want = open(os.path.join(ROM_DIR, full), 'rb').read()
+            print('  %-14s %6d bytes  %s' % (full, len(got),
+                                             'ok' if got == want else 'MISMATCH'))
+            continue
         exp = FILES.get(full)
         if exp:
             want = open(os.path.join(SRC_ROOT, exp), 'rb').read()

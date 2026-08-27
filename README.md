@@ -36,8 +36,12 @@ of the Nokia 5110 LCD, the buttons, the speaker and an SPI SD card. Upstream it
 ships as an ASP.NET MVC application whose only way to load a game is a file
 picker, so `webemulator/` is a standalone rebuild of it:
 
-- `webemulator/js/` — the emulator core, taken from upstream with four fixes
-  and one feature ported from Simbuino's standalone C# emulator:
+- `webemulator/js/` — the emulator core, taken from upstream with the fixes
+  below and one feature ported from Simbuino's standalone C# emulator. All of
+  them, in full, are in
+  [`webemulator/upstream/`](webemulator/upstream/); the card fixes apply to
+  the standalone too and have been made there as well, in a
+  [fork](https://github.com/joyrider3774/Simbuino):
   - `AtmelContext.js` — `UpdateInterruptFlags()` tested a bare `SREG`, which is
     undefined in the port (everywhere else it writes `AtmelContext.SREG`). It
     threw a `ReferenceError` out of the frame loop, freezing any sketch that
@@ -54,9 +58,23 @@ picker, so `webemulator/` is a standalone rebuild of it:
     Nearly every entry executes `MULSU` — 116 of the 119 present when this was
     measured — though only two were measurably affected by the bug itself
     (Super Crate Buino, Community RPG).
-  - `SdDevice.js` — reads a byte past the end of a card image as `0` instead of
-    clocking `undefined` out over SPI, so a card image can be stored trimmed of
-    its trailing empty space.
+  - `SdDevice.js` — five changes to the card, which together are what makes
+    the SdFat-based sketches work at all:
+    - a byte past the end of a card image reads back as `0` instead of clocking
+      `undefined` out over SPI, so an image can be stored trimmed of its
+      trailing empty space;
+    - an **Ncr fill byte** before every R1. A real card sends 1–8 fill bytes
+      before its response and SdFat discards the first byte after a command for
+      exactly that reason, so it threw every response away. This, not missing
+      commands, is why no SdFat sketch could mount the card;
+    - **CMD8** answers `0x05` — illegal command *and still idle* — rather than
+      upstream's `0x04`. SdFat compares against that exact value to decide the
+      card is a v1, and with `0x04` took the v2 branch and failed;
+    - **CMD18/CMD12**, the multi-block read SdFat prefers over CMD17;
+    - **CMD24/CMD25/CMD13/ACMD23** — writing. `chip-8-gamebuino` pages the
+      CHIP-8 address space through files on the card, so it cannot run a ROM
+      without them. Writes land in the image held in memory and are not
+      persisted.
   - `Lcd.js` — the **grey blend**, ported from the standalone's Persistence
     option. The library draws `GRAY` as a checkerboard that inverts every
     frame (`(x ^ y ^ frameCount) & 1`), so on a one-bit panel it only reads as
@@ -247,7 +265,7 @@ emulator problem, and its screenshot is therefore taken without pressing A.
 
 ### The SD card
 
-Seven entries read data files off the card, so the player mounts a shared
+Twelve entries read data files off the card, so the player mounts a shared
 FAT16 image, [`webemulator/sdcard.img`](webemulator/sdcard.img), for them.
 It is built by [`build/mksd.py`](build/mksd.py) and holds:
 
@@ -260,16 +278,33 @@ It is built by [`build/mksd.py`](build/mksd.py) and holds:
 | `DF01.LDV` | Gamebookuino | `games/Gamebookuino/books+LDV/` — the book itself |
 | `THORDAR.DAT` | Thordar's Adventure | `games_precompiled/ThordarsAdventure/` |
 | `CURVES/HILLS/LANES/STRAIGHT/TRACK.DAT` | Little Racer | `games_precompiled/LittleRacer/` — its track geometry |
+| `SCALE.MID` | makerbuino-midi | written by `mksd.py`; no MIDI file exists anywhere in the archive |
+| `BRIX/INVADERS/BLITZ/PONG1/TETRIS.CH8` | chip-8-gamebuino | [`build/chip8roms/`](build/chip8roms/) — CHIP-8 programs, not Gamebuino software |
+| `DEMO.CH8` | chip-8-gamebuino | written by `mksd.py` |
+
+`makerbuino-sd-explorer` needs no file of its own — it browses whatever is
+there. `chip-8-gamebuino` is an interpreter rather than a game, so it needs
+something to interpret: five well-known CHIP-8 programs from the 1970s–90s ride
+along for that, with their authorship and redistribution terms recorded in
+[`build/chip8roms/README.md`](build/chip8roms/README.md). It also writes
+`CHIPMEM?.DAT` paging files to the card as it runs; those live only in the
+browser's copy of the image and are never persisted.
 
 Without their data these say so plainly rather than failing quietly:
 Wolfenduino draws "SD CARD MOUNT ERROR", Gamebookuino stops at its title
 screen.
 
-Two further binaries name a data file in their own embedded strings but never
-issue a single SD command in the emulator, so their data is **not** bundled:
-`OperationFox` (`EP1.DAT`, 4.8 MB) and `PlayBuino` (`MEDIA.WAV`, 3.2 MB). Both
-were tested with a card image built for them and neither touched it — adding
-8 MB to this repository on that basis would have been guesswork.
+Two further binaries name a data file in their own embedded strings, and their
+data is on the card as well: `OperationFox` (`EP1.DAT`, 4.8 MB) and `PlayBuino`
+(`MEDIA.WAV`, 3.2 MB), both shipped alongside the `.HEX` the archive recovered.
+Their READMEs say to copy them to the card, so they are there.
+
+They are worth a caveat, though: **neither has ever been seen to issue a single
+SD command under emulation**, before the card fixes above, after them, or with
+their own data present. Whatever gates that code is not reached here. They cost
+this image 8 of its 9.6 MB, and it is fetched once per visitor across every
+entry that mounts the card, so if that weight is ever a problem these two are
+the first thing to drop.
 
 The base image was a "superfloppy" — `mkfs.fat` straight onto the device, no
 partition table. Petit FatFs (B-Rally) accepts that, but GB_Fat (Community RPG)
@@ -279,11 +314,14 @@ wrapped in a real MBR; every reader involved accepts a partitioned card, and
 only GB_Fat requires it. It is trimmed of trailing empty space, hence the
 `SdDevice.js` change noted above.
 
-`sd_map_test` gets the card mounted but still cannot read it: it uses SdFat,
-whose card-init handshake needs commands (`CMD9`/`CMD10` and friends) that
-Simbuino's deliberately minimal SD device does not answer, so it spins on
-`CMD0` and never mounts. Same for `chip-8-gamebuino`, which additionally uses
-the card as writable swap space — the emulated card is read-only.
+The SdFat-based sketches — `sd_map_test`, `chip-8-gamebuino`,
+`makerbuino-midi`, `makerbuino-sd-explorer` — used to fail at `SD.begin()`,
+and it looked at first like missing commands. It was not: the trace showed the
+card returning a perfectly correct `01` to CMD0 and SdFat rejecting it, because
+SdFat discards the first byte after every command and the emulated card
+answered on exactly that byte. That, the CMD8 response value, multi-block reads
+and write support are the five `SdDevice.js` changes listed above; all four
+sketches mount and run now.
 
 Two other entries look like SD users but are not: `Pirates` has its SD check
 short-circuited by the author with an explicit *"ONLY for simbuino test"*
@@ -348,7 +386,7 @@ Two things this repo depends on:
 - **Nothing is tracked in Git LFS.** Pages serves an LFS-tracked file as its
   pointer text, not its contents, which would break every `.hex` and every
   screenshot. Nothing here is big enough to need LFS — the largest file is the
-  1.5 MB SD card image — so all links stay plain relative paths.
+  9.6 MB SD card image — so all links stay plain relative paths.
 
 ## Downloading a game
 

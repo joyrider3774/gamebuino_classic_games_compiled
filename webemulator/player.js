@@ -109,6 +109,12 @@ $(function () {
 			AtmelProcessor.InitInstrTable();
 			Lcd.Reset();
 			Buttons.Reset();
+			// The card is stateful now that it handles multi-block reads and
+			// writes; without this a reset mid-transfer leaves it streaming a
+			// block to a CPU that has restarted, and it never sees a command
+			// again.
+			SdDevice.Reset();
+			SdDevice.AppCommand = false;
 			this.FramesRun = 0;
 			return this.Loaded;
 		},
