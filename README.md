@@ -126,7 +126,8 @@ each card says which:
 - **29 are marked `binary only`** — the archive's `games_precompiled/` and
   `tools_precompiled/` categories. No source for these survives anywhere; the
   archive recovered a compiled `.HEX` and nothing else, so they cannot be
-  rebuilt. The **Binary only** tab on the page filters to exactly these.
+  rebuilt. The page has a **Binary only** tab for exactly these, and a
+  **Source code** tab for the 128 entries whose source does survive.
 - **7 are marked `prebuilt hex`** — source exists, but the author's own
   binary is what runs here (see below).
 

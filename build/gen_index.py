@@ -490,6 +490,7 @@ def main():
     games = sum(1 for e in entries if e['top'] == 'games')
     tools = sum(1 for e in entries if e['top'] == 'tools')
     binary = sum(1 for e in entries if e.get('precompiled'))
+    withsource = len(entries) - binary
     built = datetime.date.today().isoformat()
 
     cards = '\n\n      '.join(card_html(e) for e in entries)
@@ -530,6 +531,7 @@ def main():
   <button class="tab" type="button" data-kind="all" aria-pressed="true">All</button>
   <button class="tab" type="button" data-kind="games" aria-pressed="false">Games ({games})</button>
   <button class="tab" type="button" data-kind="tools" aria-pressed="false">Tools ({tools})</button>
+  <button class="tab" type="button" data-source="source" aria-pressed="false">Source code ({withsource})</button>
   <button class="tab" type="button" data-source="binary" aria-pressed="false">Binary only ({binary})</button>
   <span class="count" id="count"></span>
 </div>
